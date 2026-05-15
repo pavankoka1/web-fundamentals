@@ -1,11 +1,12 @@
 'use client'
-import dynamic from 'next/dynamic'
+import { lazy, Suspense } from 'react'
 
-const HeroScene = dynamic(() => import('./HeroScene'), {
-  ssr: false,
-  loading: () => <div className="w-full h-full" style={{ background: 'var(--color-surface)' }} />,
-})
+const HeroScene = lazy(() => import('./HeroScene'))
 
 export default function HeroSceneLoader() {
-  return <HeroScene />
+  return (
+    <Suspense fallback={<div className="w-full h-full" style={{ background: 'var(--color-surface)' }} />}>
+      <HeroScene />
+    </Suspense>
+  )
 }
