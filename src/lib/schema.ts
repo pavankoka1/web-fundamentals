@@ -1,0 +1,46 @@
+import type { Topic } from '@/data/topics'
+
+const BASE_URL = 'https://web-internals.dev'
+
+export function topicJsonLd(topic: Topic) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'TechArticle',
+    headline: `${topic.title} — How the Web Works`,
+    description: topic.seoDescription,
+    articleSection: topic.phase,
+    position: topic.order,
+    url: `${BASE_URL}/${topic.id}`,
+    isPartOf: {
+      '@type': 'WebSite',
+      name: 'Web Internals',
+      url: BASE_URL,
+    },
+    author: {
+      '@type': 'Organization',
+      name: 'Web Internals',
+    },
+  }
+}
+
+export function homeJsonLd(topics: Topic[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'Web Internals',
+    description: 'The definitive visual guide to how the web works — from URL parsing to GPU compositing, explained with interactive WebGL animations.',
+    url: BASE_URL,
+    mainEntity: {
+      '@type': 'ItemList',
+      name: 'How the Web Works — 16 Concepts',
+      numberOfItems: topics.length,
+      itemListElement: topics.map((t, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: t.title,
+        url: `${BASE_URL}/${t.id}`,
+        description: t.seoDescription,
+      })),
+    },
+  }
+}
