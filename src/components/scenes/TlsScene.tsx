@@ -1,85 +1,246 @@
 'use client'
-import { useRef, useMemo } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
-import { Text } from '@react-three/drei'
-import * as THREE from 'three'
 
-const PACKETS = [
-  { label: 'ClientHello', color: '#FFB340', fromX: -2.5, toX: 2.5, yBase: 1.3, offset: 0 },
-  { label: 'ServerHello+Cert', color: '#4D9FFF', fromX: 2.5, toX: -2.5, yBase: 0, offset: 0.33 },
-  { label: 'Finished', color: '#00E5A0', fromX: -2.5, toX: 2.5, yBase: -1.3, offset: 0.66 },
+import { useEffect, useRef } from 'react'
+
+const CYCLE = 7500
+
+function ease(t: number) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t }
+function lerp(a: number, b: number, t: number) { return a+(b-a)*Math.max(0,Math.min(1,t)) }
+function clamp(x: number, lo=0, hi=1) { return Math.max(lo,Math.min(hi,x)) }
+
+const MESSAGES = [
+  { label:'ClientHello',        sub:'supported cipher suites', color:'#FFB340', dir:'right', t0:0.00, t1:0.20 },
+  { label:'ServerHello + Cert', sub:'public key + identity',   color:'#4D9FFF', dir:'left',  t0:0.24, t1:0.46 },
+  { label:'Finished',           sub:'session keys exchanged',  color:'#00E5A0', dir:'right', t0:0.50, t1:0.70 },
 ]
 
-function Column({ x, label }: { x: number; label: string }) {
-  const edgeGeo = useMemo(() => new THREE.EdgesGeometry(new THREE.BoxGeometry(1.3, 0.6, 0.12)), [])
-  return (
-    <group position={[x, 0, 0]}>
-      <mesh>
-        <boxGeometry args={[1.3, 0.6, 0.12]} />
-        <meshStandardMaterial color="#0D0D1A" emissive="#FFB340" emissiveIntensity={0.2} />
-      </mesh>
-      <lineSegments geometry={edgeGeo}>
-        <lineBasicMaterial color="#FFB340" transparent opacity={0.5} />
-      </lineSegments>
-      <Text position={[0, 0, 0.07]} fontSize={0.16} color="#FFB340" anchorX="center" anchorY="middle">{label}</Text>
-      <mesh position={[0, -1.8, 0]}>
-        <boxGeometry args={[0.04, 3.0, 0.01]} />
-        <meshStandardMaterial color="#FFB340" transparent opacity={0.15} />
-      </mesh>
-    </group>
-  )
-}
-
-function Packet({ label, color, fromX, toX, yBase, offset }: { label: string; color: string; fromX: number; toX: number; yBase: number; offset: number }) {
-  const ref = useRef<THREE.Mesh>(null)
-  const labelRef = useRef<THREE.Group>(null)
-  useFrame(({ clock }) => {
-    const t = (clock.getElapsedTime() * 0.28 + offset) % 1
-    const x = THREE.MathUtils.lerp(fromX, toX, t)
-    const y = yBase + (toX > fromX ? -t * 0.7 : t * 0.7)
-    if (ref.current) { ref.current.position.x = x; ref.current.position.y = y }
-    if (labelRef.current) { labelRef.current.position.x = x; labelRef.current.position.y = y + 0.22 }
-  })
-  return (
-    <>
-      <mesh ref={ref}>
-        <sphereGeometry args={[0.1, 12, 12]} />
-        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={5} />
-      </mesh>
-      <group ref={labelRef}>
-        <Text fontSize={0.12} color={color} anchorX="center" anchorY="middle">{label}</Text>
-      </group>
-    </>
-  )
-}
-
-function LockIcon() {
-  const ref = useRef<THREE.Group>(null)
-  useFrame(({ clock }) => {
-    if (!ref.current) return
-    const t = clock.getElapsedTime()
-    const phase = (t * 0.28 + 0.66) % 1
-    ref.current.visible = phase > 0.7
-    ref.current.scale.setScalar(0.8 + Math.sin(t * 2) * 0.1)
-  })
-  return (
-    <group ref={ref} position={[0, -1.3, 0]}>
-      <Text fontSize={0.4} color="#00E5A0" anchorX="center" anchorY="middle">🔒</Text>
-      <Text position={[0, -0.4, 0]} fontSize={0.13} color="#00E5A0" anchorX="center" anchorY="middle">Encrypted</Text>
-    </group>
-  )
-}
-
 export default function TlsScene() {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    let rafId: number
+    const startTime = performance.now()
+
+    const observer = new ResizeObserver(() => {
+      const dpr = window.devicePixelRatio || 1
+      canvas.width = canvas.offsetWidth * dpr
+      canvas.height = canvas.offsetHeight * dpr
+    })
+    observer.observe(canvas)
+
+    function draw() {
+      const dpr = window.devicePixelRatio || 1
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+      const W = canvas.offsetWidth
+      const H = canvas.offsetHeight
+      const now = performance.now()
+      const tN = ((now - startTime) % CYCLE) / CYCLE
+
+      ctx.save()
+      ctx.scale(dpr, dpr)
+      ctx.clearRect(0, 0, W, H)
+
+      // Background
+      ctx.fillStyle = '#07070E'
+      ctx.fillRect(0, 0, W, H)
+
+      // Radial glow
+      const grad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W,H)*0.6)
+      grad.addColorStop(0, 'rgba(255,179,64,0.04)')
+      grad.addColorStop(1, 'rgba(0,0,0,0)')
+      ctx.fillStyle = grad
+      ctx.fillRect(0, 0, W, H)
+
+      // Layout
+      const LX = Math.max(W*0.20, 90)
+      const RX = Math.min(W*0.80, W-90)
+      const BOX_H = Math.max(42, Math.min(54, H*0.15))
+      const BOX_W = Math.min(120, (RX-LX)*0.30)
+      const BOX_TOP = 22
+
+      const leftSending = MESSAGES.some(m => m.dir==='right' && tN >= m.t0 && tN < m.t1)
+      const rightSending = MESSAGES.some(m => m.dir==='left' && tN >= m.t0 && tN < m.t1)
+
+      function drawBox(cx: number, label: string, sub: string, color: string, sending: boolean) {
+        const x = cx - BOX_W/2
+        const y = BOX_TOP
+        ctx.save()
+        if (sending) {
+          ctx.shadowColor = color
+          ctx.shadowBlur = 12
+        }
+        ctx.fillStyle = color+'14'
+        ctx.strokeStyle = sending ? color : color+'55'
+        ctx.lineWidth = sending ? 2 : 1
+        ctx.beginPath()
+        ctx.roundRect(x, y, BOX_W, BOX_H, 6)
+        ctx.fill()
+        ctx.stroke()
+        ctx.restore()
+
+        ctx.save()
+        ctx.fillStyle = color
+        ctx.beginPath()
+        ctx.roundRect(x, y, BOX_W, 3, [3,3,0,0])
+        ctx.fill()
+        ctx.restore()
+
+        ctx.save()
+        ctx.fillStyle = '#E8E8F0'
+        ctx.font = '700 13px monospace'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText(label, cx, y + BOX_H*0.42)
+        ctx.restore()
+
+        ctx.save()
+        ctx.fillStyle = '#44446A'
+        ctx.font = '9.5px monospace'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText(sub, cx, y + BOX_H*0.72)
+        ctx.restore()
+      }
+
+      drawBox(LX, 'CLIENT', 'your browser', '#FFB340', leftSending)
+      drawBox(RX, 'SERVER', 'github.com',   '#FFB340', rightSending)
+
+      // Lifelines
+      const lifeTop = BOX_TOP + BOX_H + 4
+      const lifeBot = H - 44
+      ctx.save()
+      ctx.setLineDash([4,4])
+      ctx.strokeStyle = '#44446A'
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      ctx.moveTo(LX, lifeTop)
+      ctx.lineTo(LX, lifeBot)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.moveTo(RX, lifeTop)
+      ctx.lineTo(RX, lifeBot)
+      ctx.stroke()
+      ctx.restore()
+
+      const lifeH = lifeBot - lifeTop
+      const msgYs = MESSAGES.map((_, i) => lifeTop + lifeH * (i+1) / (MESSAGES.length+1))
+
+      MESSAGES.forEach((msg, i) => {
+        const y = msgYs[i]
+        const fromX = msg.dir === 'right' ? LX : RX
+        const toX   = msg.dir === 'right' ? RX : LX
+        const localRaw = clamp((tN - msg.t0) / (msg.t1 - msg.t0))
+        const inFlight = tN >= msg.t0 && tN < msg.t1
+        const done = tN >= msg.t1
+
+        // Ghost dashed line
+        ctx.save()
+        ctx.setLineDash([5,4])
+        ctx.strokeStyle = msg.color+'28'
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.moveTo(fromX, y)
+        ctx.lineTo(toX, y)
+        ctx.stroke()
+        ctx.restore()
+
+        if (inFlight) {
+          const dotX = lerp(fromX, toX, ease(localRaw))
+          ctx.save()
+          ctx.shadowColor = msg.color
+          ctx.shadowBlur = 8
+          ctx.strokeStyle = msg.color
+          ctx.lineWidth = 2
+          ctx.setLineDash([])
+          ctx.beginPath()
+          ctx.moveTo(fromX, y)
+          ctx.lineTo(dotX, y)
+          ctx.stroke()
+          ctx.restore()
+
+          ctx.save()
+          ctx.shadowColor = msg.color
+          ctx.shadowBlur = 14
+          ctx.fillStyle = msg.color
+          ctx.beginPath()
+          ctx.arc(dotX, y, 5.5, 0, Math.PI*2)
+          ctx.fill()
+          ctx.restore()
+        } else if (done) {
+          ctx.save()
+          ctx.strokeStyle = msg.color
+          ctx.lineWidth = 1.5
+          ctx.setLineDash([])
+          ctx.beginPath()
+          ctx.moveTo(fromX, y)
+          ctx.lineTo(toX, y)
+          ctx.stroke()
+          ctx.restore()
+
+          const dir = msg.dir === 'right' ? 1 : -1
+          ctx.save()
+          ctx.fillStyle = msg.color
+          ctx.beginPath()
+          ctx.moveTo(toX, y)
+          ctx.lineTo(toX - dir*8, y - 5)
+          ctx.lineTo(toX - dir*8, y + 5)
+          ctx.closePath()
+          ctx.fill()
+          ctx.restore()
+        }
+
+        const midX = (fromX + toX) / 2
+        ctx.save()
+        ctx.fillStyle = msg.color
+        ctx.font = '700 11px monospace'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'bottom'
+        ctx.fillText(msg.label, midX, y - 4)
+        ctx.restore()
+
+        ctx.save()
+        ctx.fillStyle = '#44446A'
+        ctx.font = '9px monospace'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'top'
+        ctx.fillText(msg.sub, midX, y + 5)
+        ctx.restore()
+      })
+
+      // Status
+      if (tN > 0.74 && tN < 0.94) {
+        const phase = (tN - 0.74) / (0.94 - 0.74)
+        const alpha = Math.sin(phase * Math.PI)
+        ctx.save()
+        ctx.globalAlpha = alpha
+        ctx.shadowColor = '#00E5A0'
+        ctx.shadowBlur = 12
+        ctx.fillStyle = '#00E5A0'
+        ctx.font = '700 14px monospace'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText('🔒  Encrypted channel open', W/2, H - 24)
+        ctx.restore()
+      }
+
+      ctx.restore()
+      rafId = requestAnimationFrame(draw)
+    }
+
+    rafId = requestAnimationFrame(draw)
+    return () => {
+      cancelAnimationFrame(rafId)
+      observer.disconnect()
+    }
+  }, [])
+
   return (
-    <Canvas camera={{ position: [0, 0, 8], fov: 50 }} gl={{ antialias: true, alpha: true }} style={{ width: '100%', height: '100%' }}>
-      <ambientLight intensity={0.3} />
-      <pointLight position={[0, 4, 4]} intensity={2} color="#FFB340" />
-      <Column x={-2.5} label="Client" />
-      <Column x={2.5} label="Server" />
-      {PACKETS.map(p => <Packet key={p.label} {...p} />)}
-      <LockIcon />
-      <Text position={[0, 2.2, 0]} fontSize={0.2} color="#FFB340" anchorX="center" anchorY="middle">TLS Handshake</Text>
-    </Canvas>
+    <canvas
+      ref={canvasRef}
+      style={{ width:'100%', height:'100%', display:'block', background:'#07070E' }}
+    />
   )
 }

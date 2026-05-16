@@ -14,30 +14,34 @@ const TREE_NODES = [
 ]
 
 function CharStream() {
-  const refs = useRef<(THREE.Mesh | null)[]>([])
+  const groupRefs = useRef<(THREE.Group | null)[]>([])
   useFrame(({ clock }) => {
     CHARS.forEach((_, i) => {
-      const mesh = refs.current[i]
-      if (!mesh) return
+      const group = groupRefs.current[i]
+      if (!group) return
       const t = ((clock.getElapsedTime() * 0.5 + i * 0.07) % 1)
-      mesh.position.x = THREE.MathUtils.lerp(-5.5, -2.2, t)
-      mesh.position.y = Math.sin(clock.getElapsedTime() * 2 + i) * 0.1
-      const mat = mesh.material as THREE.MeshStandardMaterial
-      mat.opacity = t < 0.9 ? 1 : 1 - (t - 0.9) / 0.1
+      group.position.x = THREE.MathUtils.lerp(-5.5, -2.2, t)
+      group.position.y = Math.sin(clock.getElapsedTime() * 2 + i) * 0.1
+      const alpha = t < 0.9 ? 1 : 1 - (t - 0.9) / 0.1
+      group.children.forEach(child => {
+        if (child instanceof THREE.Mesh) {
+          (child.material as THREE.MeshStandardMaterial).opacity = alpha
+        }
+      })
     })
   })
   return (
     <>
       {CHARS.map((ch, i) => (
-        <mesh key={i} ref={el => { refs.current[i] = el }} position={[-5.5, 0, 0]}>
-          <planeGeometry args={[0.22, 0.28]} />
-          <meshStandardMaterial color="#4D9FFF" emissive="#4D9FFF" emissiveIntensity={0.5} transparent />
-        </mesh>
-      ))}
-      {CHARS.map((ch, i) => (
-        <Text key={`t${i}`} position={[-5.5, 0, 0.01]} fontSize={0.16} color="#000000" anchorX="center" anchorY="middle">
-          {ch}
-        </Text>
+        <group key={i} ref={el => { groupRefs.current[i] = el }} position={[-5.5, 0, 0]}>
+          <mesh>
+            <planeGeometry args={[0.22, 0.28]} />
+            <meshStandardMaterial color="#4D9FFF" emissive="#4D9FFF" emissiveIntensity={0.5} transparent />
+          </mesh>
+          <Text position={[0, 0, 0.02]} fontSize={0.16} color="#000000" anchorX="center" anchorY="middle">
+            {ch}
+          </Text>
+        </group>
       ))}
     </>
   )

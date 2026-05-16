@@ -310,37 +310,49 @@ export default function EventLoopScene() {
 
       // Microtask 0
       {
-        let mx = queuesX + 8, my = micSlotY(0), ma = mic0a, mg = 0.1, mact = false
+        let mx = queuesX + 8, my = micSlotY(0), ma = mic0a, mg = 0.1, mact = false, mw = QW
         if (phase === 3) {
-          if      (pk < 0.20) { mx = lerp(queuesX + 8, stackX + 9, ease(pk / 0.20)); my = lerp(micSlotY(0), stackSlotY(0), ease(pk / 0.20)); mg = pk / 0.20 * 0.8 }
-          else if (pk < 0.38) { mx = stackX + 9; my = stackSlotY(0); mact = true; mg = 0.9 }
-          else                { ma = Math.max(0, 1 - (pk - 0.38) * 8); mx = stackX + 9; my = stackSlotY(0) }
+          if (pk < 0.20) {
+            const f = ease(pk / 0.20)
+            mx = lerp(queuesX + 8, stackX + 9, f); my = lerp(micSlotY(0), stackSlotY(0), f)
+            mw = lerp(QW, CW, f); mg = f * 0.8
+          }
+          else if (pk < 0.38) { mx = stackX + 9; my = stackSlotY(0); mact = true; mg = 0.9; mw = CW }
+          else                { ma = Math.max(0, 1 - (pk - 0.38) * 8); mx = stackX + 9; my = stackSlotY(0); mw = CW }
         }
-        drawCard(ctx, mx, my, QW, CH, 'Promise.then()', 'microtask', C.micro, ma, mg, mact)
+        drawCard(ctx, mx, my, mw, CH, 'Promise.then()', 'microtask', C.micro, ma, mg, mact)
       }
 
       // Microtask 1 — drains after mic0
       {
-        let mx = queuesX + 8, my = micSlotY(phase >= 3 && pk > 0.15 ? 0 : 1), ma = mic1a, mg = 0.1, mact = false
+        let mx = queuesX + 8, my = micSlotY(phase >= 3 && pk > 0.15 ? 0 : 1), ma = mic1a, mg = 0.1, mact = false, mw = QW
         if (phase === 3) {
           if (pk < 0.35)      { my = micSlotY(1) }
-          else if (pk < 0.50) { mx = lerp(queuesX + 8, stackX + 9, ease((pk - 0.35) / 0.15)); my = lerp(micSlotY(0), stackSlotY(0), ease((pk - 0.35) / 0.15)); mg = (pk - 0.35) / 0.15 * 0.8 }
-          else if (pk < 0.65) { mx = stackX + 9; my = stackSlotY(0); mact = true; mg = 0.9 }
-          else                { ma = Math.max(0, 1 - (pk - 0.65) * 7); mx = stackX + 9; my = stackSlotY(0) }
+          else if (pk < 0.50) {
+            const f = ease((pk - 0.35) / 0.15)
+            mx = lerp(queuesX + 8, stackX + 9, f); my = lerp(micSlotY(0), stackSlotY(0), f)
+            mw = lerp(QW, CW, f); mg = f * 0.8
+          }
+          else if (pk < 0.65) { mx = stackX + 9; my = stackSlotY(0); mact = true; mg = 0.9; mw = CW }
+          else                { ma = Math.max(0, 1 - (pk - 0.65) * 7); mx = stackX + 9; my = stackSlotY(0); mw = CW }
         }
-        if (phase < 4) drawCard(ctx, mx, my, QW, CH, '.then(updateUI)', 'microtask', C.micro, ma, mg, mact)
+        if (phase < 4) drawCard(ctx, mx, my, mw, CH, '.then(updateUI)', 'microtask', C.micro, ma, mg, mact)
       }
 
       // Microtask 2 — drains last
       {
-        let mx = queuesX + 8, my = micSlotY(2), ma = mic2a, mg = 0.1, mact = false
+        let mx = queuesX + 8, my = micSlotY(2), ma = mic2a, mg = 0.1, mact = false, mw = QW
         if (phase === 3) {
           if (pk < 0.55)      { my = micSlotY(phase >= 3 && pk > 0.35 ? 1 : 2) }
-          else if (pk < 0.68) { mx = lerp(queuesX + 8, stackX + 9, ease((pk - 0.55) / 0.13)); my = lerp(micSlotY(0), stackSlotY(0), ease((pk - 0.55) / 0.13)); mg = (pk - 0.55) / 0.13 * 0.8 }
-          else if (pk < 0.82) { mx = stackX + 9; my = stackSlotY(0); mact = true; mg = 0.9 }
-          else                { ma = Math.max(0, 1 - (pk - 0.82) * 6); mx = stackX + 9; my = stackSlotY(0) }
+          else if (pk < 0.68) {
+            const f = ease((pk - 0.55) / 0.13)
+            mx = lerp(queuesX + 8, stackX + 9, f); my = lerp(micSlotY(0), stackSlotY(0), f)
+            mw = lerp(QW, CW, f); mg = f * 0.8
+          }
+          else if (pk < 0.82) { mx = stackX + 9; my = stackSlotY(0); mact = true; mg = 0.9; mw = CW }
+          else                { ma = Math.max(0, 1 - (pk - 0.82) * 6); mx = stackX + 9; my = stackSlotY(0); mw = CW }
         }
-        if (phase < 4) drawCard(ctx, mx, my, QW, CH, 'queueMicrotask()', 'microtask', C.micro, ma, mg, mact)
+        if (phase < 4) drawCard(ctx, mx, my, mw, CH, 'queueMicrotask()', 'microtask', C.micro, ma, mg, mact)
       }
 
       // ── PHASE 3 label: "Drain ALL micro tasks first!" ────────────────────
@@ -375,11 +387,13 @@ export default function EventLoopScene() {
       // ── PHASE 5: Next macrotask enters call stack ─────────────────────────
       if (phase === 5) {
         const moveFrac = clamp(pk / 0.35)
-        const tx  = lerp(queuesX + 8, stackX + 9, ease(moveFrac))
-        const ty  = lerp(macSlotY(0), stackSlotY(0), ease(moveFrac))
+        const f   = ease(moveFrac)
+        const tx  = lerp(queuesX + 8, stackX + 9, f)
+        const ty  = lerp(macSlotY(0), stackSlotY(0), f)
+        const tw  = lerp(QW, CW, f)
         const act = pk > 0.42 && pk < 0.88
         const ta  = pk > 0.88 ? Math.max(0, 1 - (pk - 0.88) * 8) : 1
-        drawCard(ctx, tx, ty, QW, CH, 'setTimeout(fn, 0)', 'macrotask', C.macro, ta, act ? 0.85 : 0.3, act)
+        drawCard(ctx, tx, ty, tw, CH, 'setTimeout(fn, 0)', 'macrotask', C.macro, ta, act ? 0.85 : 0.3, act)
       }
 
       // ── Status bar ────────────────────────────────────────────────────────

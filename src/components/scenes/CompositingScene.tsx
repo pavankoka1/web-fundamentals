@@ -50,7 +50,7 @@ function GpuLayer({ label, sublabel, z, color, canRepaint, index }: { label: str
       <Text position={[0, 0.2, 0.05]} fontSize={0.15} color={color} anchorX="center" anchorY="middle">{label}</Text>
       <Text position={[0, -0.18, 0.05]} fontSize={0.11} color="#4A4A6A" anchorX="center" anchorY="middle">{sublabel}</Text>
       {canRepaint && (
-        <Text position={[2.8, 0.2, 0.05]} fontSize={0.11} color="#FF4D6D" anchorX="center" anchorY="middle">flash!</Text>
+        <Text position={[1.6, 0.2, 0.05]} fontSize={0.11} color="#FF4D6D" anchorX="center" anchorY="middle">repaint!</Text>
       )}
     </group>
   )

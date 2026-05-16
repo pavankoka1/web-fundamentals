@@ -1,96 +1,261 @@
 'use client'
-import { useRef, useMemo } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
-import { Text } from '@react-three/drei'
-import * as THREE from 'three'
 
-function RequestBox() {
-  const ref = useRef<THREE.Mesh>(null)
-  const labelRef = useRef<THREE.Group>(null)
-  const edgeGeo = useMemo(() => new THREE.EdgesGeometry(new THREE.BoxGeometry(1.6, 0.5, 0.1)), [])
-  useFrame(({ clock }) => {
-    const t = (clock.getElapsedTime() * 0.35) % 1
-    const x = THREE.MathUtils.lerp(-4, 4, t)
-    if (ref.current) ref.current.position.x = x
-    if (labelRef.current) labelRef.current.position.x = x
-  })
-  return (
-    <>
-      <mesh ref={ref} position={[-4, 0.6, 0]}>
-        <boxGeometry args={[1.6, 0.5, 0.1]} />
-        <meshStandardMaterial color="#00D4FF" emissive="#00D4FF" emissiveIntensity={0.4} transparent opacity={0.8} />
-      </mesh>
-      <group ref={labelRef} position={[-4, 1.05, 0]}>
-        <Text fontSize={0.14} color="#00D4FF" anchorX="center" anchorY="middle">GET /users/torvalds</Text>
-      </group>
-    </>
-  )
-}
+import { useEffect, useRef } from 'react'
 
-function ResponseBox() {
-  const ref = useRef<THREE.Mesh>(null)
-  const labelRef = useRef<THREE.Group>(null)
-  useFrame(({ clock }) => {
-    const t = ((clock.getElapsedTime() * 0.35) + 0.5) % 1
-    const x = THREE.MathUtils.lerp(4, -4, t)
-    if (ref.current) ref.current.position.x = x
-    if (labelRef.current) labelRef.current.position.x = x
-  })
-  return (
-    <>
-      <mesh ref={ref} position={[4, -0.6, 0]}>
-        <boxGeometry args={[1.4, 0.5, 0.1]} />
-        <meshStandardMaterial color="#4D9FFF" emissive="#4D9FFF" emissiveIntensity={0.4} transparent opacity={0.8} />
-      </mesh>
-      <group ref={labelRef} position={[4, -1.05, 0]}>
-        <Text fontSize={0.14} color="#4D9FFF" anchorX="center" anchorY="middle">200 OK</Text>
-      </group>
-    </>
-  )
-}
+const CYCLE = 6000
 
-function Arrow({ y, color, dir }: { y: number; color: string; dir: 1 | -1 }) {
-  const geo = useMemo(() => {
-    const pts: number[] = [-4, y, 0, 4, y, 0]
-    const g = new THREE.BufferGeometry()
-    g.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3))
-    return g
-  }, [y])
-  return (
-    <line geometry={geo}>
-      <lineBasicMaterial color={color} transparent opacity={0.2} />
-    </line>
-  )
-}
+function ease(t: number) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t }
+function lerp(a: number, b: number, t: number) { return a+(b-a)*Math.max(0,Math.min(1,t)) }
+function clamp(x: number, lo=0, hi=1) { return Math.max(lo,Math.min(hi,x)) }
 
-function Endpoint({ x, label }: { x: number; label: string }) {
-  const edgeGeo = useMemo(() => new THREE.EdgesGeometry(new THREE.BoxGeometry(1.2, 0.7, 0.1)), [])
-  return (
-    <group position={[x, 0, 0]}>
-      <mesh>
-        <boxGeometry args={[1.2, 0.7, 0.1]} />
-        <meshStandardMaterial color="#0D0D1A" emissive="#00D4FF" emissiveIntensity={0.15} />
-      </mesh>
-      <lineSegments geometry={edgeGeo}>
-        <lineBasicMaterial color="#00D4FF" transparent opacity={0.5} />
-      </lineSegments>
-      <Text position={[0, 0, 0.06]} fontSize={0.16} color="#00D4FF" anchorX="center" anchorY="middle">{label}</Text>
-    </group>
-  )
-}
+const MESSAGES = [
+  { label:'GET /users/torvalds', sub:'HTTP/1.1 request', color:'#00D4FF', dir:'right', t0:0.00, t1:0.36 },
+  { label:'200 OK',              sub:'HTML response',    color:'#4D9FFF', dir:'left',  t0:0.46, t1:0.82 },
+]
 
 export default function HttpScene() {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    let rafId: number
+    const startTime = performance.now()
+
+    const observer = new ResizeObserver(() => {
+      const dpr = window.devicePixelRatio || 1
+      canvas.width = canvas.offsetWidth * dpr
+      canvas.height = canvas.offsetHeight * dpr
+    })
+    observer.observe(canvas)
+
+    function draw() {
+      const dpr = window.devicePixelRatio || 1
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+      const W = canvas.offsetWidth
+      const H = canvas.offsetHeight
+      const now = performance.now()
+      const tN = ((now - startTime) % CYCLE) / CYCLE
+
+      ctx.save()
+      ctx.scale(dpr, dpr)
+      ctx.clearRect(0, 0, W, H)
+
+      // Background
+      ctx.fillStyle = '#07070E'
+      ctx.fillRect(0, 0, W, H)
+
+      // Radial glow
+      const grad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W,H)*0.6)
+      grad.addColorStop(0, 'rgba(0,212,255,0.04)')
+      grad.addColorStop(1, 'rgba(0,0,0,0)')
+      ctx.fillStyle = grad
+      ctx.fillRect(0, 0, W, H)
+
+      // Layout
+      const LX = Math.max(W*0.20, 90)
+      const RX = Math.min(W*0.80, W-90)
+      const BOX_H = Math.max(42, Math.min(54, H*0.15))
+      const BOX_W = Math.min(120, (RX-LX)*0.30)
+      const BOX_TOP = 22
+
+      const processing = tN > 0.36 && tN < 0.46
+
+      const leftSending = MESSAGES.some(m => m.dir==='right' && tN >= m.t0 && tN < m.t1)
+      const rightSending = MESSAGES.some(m => m.dir==='left' && tN >= m.t0 && tN < m.t1)
+
+      function drawBox(cx: number, label: string, sub: string, color: string, sending: boolean, glowing: boolean) {
+        const x = cx - BOX_W/2
+        const y = BOX_TOP
+        ctx.save()
+        if (sending || glowing) {
+          ctx.shadowColor = color
+          ctx.shadowBlur = 12
+        }
+        ctx.fillStyle = color+'14'
+        ctx.strokeStyle = (sending || glowing) ? color : color+'55'
+        ctx.lineWidth = (sending || glowing) ? 2 : 1
+        ctx.beginPath()
+        ctx.roundRect(x, y, BOX_W, BOX_H, 6)
+        ctx.fill()
+        ctx.stroke()
+        ctx.restore()
+
+        ctx.save()
+        ctx.fillStyle = color
+        ctx.beginPath()
+        ctx.roundRect(x, y, BOX_W, 3, [3,3,0,0])
+        ctx.fill()
+        ctx.restore()
+
+        ctx.save()
+        ctx.fillStyle = '#E8E8F0'
+        ctx.font = '700 13px monospace'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText(label, cx, y + BOX_H*0.42)
+        ctx.restore()
+
+        ctx.save()
+        ctx.fillStyle = '#44446A'
+        ctx.font = '9.5px monospace'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText(sub, cx, y + BOX_H*0.72)
+        ctx.restore()
+      }
+
+      drawBox(LX, 'BROWSER', 'your device', '#00D4FF', leftSending,  false)
+      drawBox(RX, 'SERVER',  'github.com',  '#4D9FFF', rightSending, processing)
+
+      // Lifelines
+      const lifeTop = BOX_TOP + BOX_H + 4
+      const lifeBot = H - 44
+      ctx.save()
+      ctx.setLineDash([4,4])
+      ctx.strokeStyle = '#44446A'
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      ctx.moveTo(LX, lifeTop)
+      ctx.lineTo(LX, lifeBot)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.moveTo(RX, lifeTop)
+      ctx.lineTo(RX, lifeBot)
+      ctx.stroke()
+      ctx.restore()
+
+      const lifeH = lifeBot - lifeTop
+      const msgYs = MESSAGES.map((_, i) => lifeTop + lifeH * (i+1) / (MESSAGES.length+1))
+
+      MESSAGES.forEach((msg, i) => {
+        const y = msgYs[i]
+        const fromX = msg.dir === 'right' ? LX : RX
+        const toX   = msg.dir === 'right' ? RX : LX
+        const localRaw = clamp((tN - msg.t0) / (msg.t1 - msg.t0))
+        const inFlight = tN >= msg.t0 && tN < msg.t1
+        const done = tN >= msg.t1
+
+        // Ghost dashed line
+        ctx.save()
+        ctx.setLineDash([5,4])
+        ctx.strokeStyle = msg.color+'28'
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.moveTo(fromX, y)
+        ctx.lineTo(toX, y)
+        ctx.stroke()
+        ctx.restore()
+
+        if (inFlight) {
+          const dotX = lerp(fromX, toX, ease(localRaw))
+          ctx.save()
+          ctx.shadowColor = msg.color
+          ctx.shadowBlur = 8
+          ctx.strokeStyle = msg.color
+          ctx.lineWidth = 2
+          ctx.setLineDash([])
+          ctx.beginPath()
+          ctx.moveTo(fromX, y)
+          ctx.lineTo(dotX, y)
+          ctx.stroke()
+          ctx.restore()
+
+          ctx.save()
+          ctx.shadowColor = msg.color
+          ctx.shadowBlur = 14
+          ctx.fillStyle = msg.color
+          ctx.beginPath()
+          ctx.arc(dotX, y, 5.5, 0, Math.PI*2)
+          ctx.fill()
+          ctx.restore()
+        } else if (done) {
+          ctx.save()
+          ctx.strokeStyle = msg.color
+          ctx.lineWidth = 1.5
+          ctx.setLineDash([])
+          ctx.beginPath()
+          ctx.moveTo(fromX, y)
+          ctx.lineTo(toX, y)
+          ctx.stroke()
+          ctx.restore()
+
+          const dir = msg.dir === 'right' ? 1 : -1
+          ctx.save()
+          ctx.fillStyle = msg.color
+          ctx.beginPath()
+          ctx.moveTo(toX, y)
+          ctx.lineTo(toX - dir*8, y - 5)
+          ctx.lineTo(toX - dir*8, y + 5)
+          ctx.closePath()
+          ctx.fill()
+          ctx.restore()
+        }
+
+        const midX = (fromX + toX) / 2
+        ctx.save()
+        ctx.fillStyle = msg.color
+        ctx.font = '700 11px monospace'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'bottom'
+        ctx.fillText(msg.label, midX, y - 4)
+        ctx.restore()
+
+        ctx.save()
+        ctx.fillStyle = '#44446A'
+        ctx.font = '9px monospace'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'top'
+        ctx.fillText(msg.sub, midX, y + 5)
+        ctx.restore()
+      })
+
+      // Processing pause indicator
+      if (processing) {
+        const phase = (tN - 0.36) / (0.46 - 0.36)
+        const pulse = 0.5 + 0.5 * Math.sin(phase * Math.PI * 6)
+        ctx.save()
+        ctx.globalAlpha = 0.3 + pulse * 0.4
+        ctx.fillStyle = '#4D9FFF'
+        ctx.font = '10px monospace'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText('processing…', RX, H * 0.55)
+        ctx.restore()
+      }
+
+      // Status
+      if (tN > 0.85 && tN < 0.97) {
+        const phase = (tN - 0.85) / (0.97 - 0.85)
+        const alpha = Math.sin(phase * Math.PI)
+        ctx.save()
+        ctx.globalAlpha = alpha
+        ctx.shadowColor = '#00E5A0'
+        ctx.shadowBlur = 12
+        ctx.fillStyle = '#00E5A0'
+        ctx.font = '700 14px monospace'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText('200 OK — page received', W/2, H - 24)
+        ctx.restore()
+      }
+
+      ctx.restore()
+      rafId = requestAnimationFrame(draw)
+    }
+
+    rafId = requestAnimationFrame(draw)
+    return () => {
+      cancelAnimationFrame(rafId)
+      observer.disconnect()
+    }
+  }, [])
+
   return (
-    <Canvas camera={{ position: [0, 0, 8], fov: 50 }} gl={{ antialias: true, alpha: true }} style={{ width: '100%', height: '100%' }}>
-      <ambientLight intensity={0.3} />
-      <pointLight position={[0, 4, 4]} intensity={2} color="#00D4FF" />
-      <Endpoint x={-4.5} label="Browser" />
-      <Endpoint x={4.5} label="Server" />
-      <Arrow y={0.6} color="#00D4FF" dir={1} />
-      <Arrow y={-0.6} color="#4D9FFF" dir={-1} />
-      <RequestBox />
-      <ResponseBox />
-      <Text position={[0, 2.2, 0]} fontSize={0.2} color="#00D4FF" anchorX="center" anchorY="middle">HTTP Request / Response</Text>
-    </Canvas>
+    <canvas
+      ref={canvasRef}
+      style={{ width:'100%', height:'100%', display:'block', background:'#07070E' }}
+    />
   )
 }
