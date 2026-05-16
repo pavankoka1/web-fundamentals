@@ -1,5 +1,6 @@
 'use client'
 import { lazy, Suspense } from 'react'
+import SceneBoundary from '@/components/SceneBoundary'
 
 const scenes: Record<string, React.LazyExoticComponent<React.ComponentType>> = {
   url:         lazy(() => import('./UrlScene')),
@@ -24,8 +25,10 @@ export default function SceneLoader({ sceneKey }: { sceneKey: string }) {
   const Scene = scenes[sceneKey]
   if (!Scene) return null
   return (
-    <Suspense fallback={<div className="w-full h-full" style={{ background: 'var(--color-surface)' }} />}>
-      <Scene />
-    </Suspense>
+    <SceneBoundary>
+      <Suspense fallback={<div className="w-full h-full" style={{ background: 'var(--color-surface)' }} />}>
+        <Scene />
+      </Suspense>
+    </SceneBoundary>
   )
 }
