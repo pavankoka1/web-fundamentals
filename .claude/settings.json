@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_playwright_playwright__browser_take_screenshot",
+      "mcp__plugin_playwright_playwright__browser_console_messages",
+      "mcp__plugin_playwright_playwright__browser_snapshot",
+      "mcp__plugin_playwright_playwright__browser_wait_for",
+      "mcp__plugin_playwright_playwright__browser_evaluate",
+      "mcp__plugin_playwright_playwright__browser_click",
+      "mcp__plugin_playwright_playwright__browser_tabs",
+      "mcp__ccd_session__mark_chapter",
+      "mcp__ccd_session__spawn_task",
+      "Bash(curl -s *)",
+      "Bash(curl -v *)",
+      "Bash(lsof -i *)",
+      "Bash(npm run build *)",
+      "Bash(npm run build)",
+      "Bash(npm run dev *)",
+      "Bash(npm run dev)",
+      "Bash(npm install *)",
+      "Bash(npm install)",
+      "Bash(pkill -f *)",
+      "Bash(npx tsc *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(mkdir -p *)"
+    ]
+  }
+}

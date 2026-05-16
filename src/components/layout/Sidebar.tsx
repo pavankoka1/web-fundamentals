@@ -1,11 +1,12 @@
 'use client'
+import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { topics, PHASES, type Topic } from '@/data/topics'
 import { phaseColor } from '@/lib/phaseColors'
 import { useProgress } from '@/hooks/useProgress'
 
-function TopicLink({ topic, isActive, isVisited }: { topic: Topic; isActive: boolean; isVisited: boolean }) {
+const TopicLink = React.memo(function TopicLink({ topic, isActive, isVisited }: { topic: Topic; isActive: boolean; isVisited: boolean }) {
   const color = phaseColor(topic.phase)
   return (
     <Link
@@ -22,7 +23,7 @@ function TopicLink({ topic, isActive, isVisited }: { topic: Topic; isActive: boo
       <span className="truncate leading-snug">{topic.title}</span>
     </Link>
   )
-}
+})
 
 export default function Sidebar() {
   const pathname = usePathname()

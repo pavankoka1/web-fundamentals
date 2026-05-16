@@ -10,15 +10,22 @@ export default function InsightCallout({ insight, phase }: { insight: string; ph
       initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.2 }}
       className="px-8 py-4">
-      <div className="rounded-xl p-6 relative overflow-hidden"
+      <div className="rounded-2xl p-6 relative overflow-hidden"
         style={{ background: color.bg, borderLeft: `3px solid ${color.accent}`, border: `1px solid ${color.dim}` }}>
-        <div className="absolute top-4 right-4 text-2xl opacity-20" style={{ color: color.accent }}>✦</div>
-        <div className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: color.accent }}>
-          Engineer&apos;s Insight
+        {/* Decorative glow */}
+        <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full pointer-events-none"
+          style={{ background: `radial-gradient(circle, ${color.accent}18 0%, transparent 70%)` }} />
+        <div className="relative">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-base" style={{ color: color.accent }}>✦</span>
+            <div className="text-xs font-semibold tracking-widest uppercase" style={{ color: color.accent }}>
+              Engineer&apos;s Insight
+            </div>
+          </div>
+          <p className="text-base leading-relaxed" style={{ color: 'var(--color-text-primary)' }}>
+            {insight}
+          </p>
         </div>
-        <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-primary)' }}>
-          {insight}
-        </p>
       </div>
     </motion.section>
   )

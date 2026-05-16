@@ -15,28 +15,35 @@ export interface Topic {
   codeDemo?: { bad: string; good: string; label: string }
 }
 
+export const PHASES = ['Network', 'Browser', 'Render', 'Execute', 'Optimize'] as const
+export type PhaseType = typeof PHASES[number]
+
 export const topics: Topic[] = [
   {
     id: 'url-parsing',
     phase: 'Network',
     order: 1,
     title: 'URL Parsing',
-    subtitle: 'The browser dissects the address before anything touches the network',
+    subtitle: 'The browser reads your address like a map before taking a single step',
     example: `You type: https://api.github.com/users/torvalds?tab=repos#about
 
-• scheme: https — browser checks HSTS preload list (~130k domains baked into binary). If listed, http:// is silently upgraded before DNS.
-• host: api.github.com — will trigger DNS. Unicode hostnames encoded as Punycode (RFC 3492).
-• path + query: /users/torvalds?tab=repos — sent verbatim to server in HTTP request line.
-• fragment: #about — stripped before any network request. Server never sees it. Lives only in window.location.hash.`,
+The browser splits this into pieces — before anything goes to the network:
+
+• https — the protocol (how to talk). Browsers have a built-in list of ~130,000 sites that must always use secure HTTPS, even if you typed http://. GitHub is on that list.
+• api.github.com — the address. This is what gets looked up in DNS next.
+• /users/torvalds?tab=repos — the path and filters, sent as-is to GitHub's server.
+• #about — this part never leaves your browser. The server never sees it. It just tells the browser to scroll to a section called "about".
+
+The split happens in milliseconds, entirely in memory. No network yet.`,
     facts: [
-      ['Parser', 'WHATWG URL Standard — 80+ state machine transitions'],
-      ['HSTS preload', 'Built into Chrome/Firefox binary — no network request needed'],
-      ['Fragment', 'Stripped before HTTP. Lives in window.location.hash only'],
-      ['Punycode', 'münchen.de → xn--mnchen-3ya.de (RFC 3492)'],
-      ['Default ports', 'HTTP:80, HTTPS:443 — omitted from Host header'],
-      ['javascript: scheme', 'Valid URL, parsed fine — browsers must explicitly block it'],
+      ['The #fragment rule', 'The part after # is stripped before any request. Servers never see it — that\'s why single-page apps can use #/routes without a server.'],
+      ['HSTS preload list', '~130,000 domains baked into every Chrome and Firefox binary. Upgrading http→https happens before DNS, no network needed.'],
+      ['Punycode encoding', 'Non-ASCII domains like münchen.de get encoded to xn--mnchen-3ya.de so old DNS servers can handle them.'],
+      ['Default ports', 'http:// implies port 80, https:// implies 443. Browsers omit them from the request.'],
+      ['URL state machine', 'The WHATWG URL parser has 80+ states — intentionally lenient to match real-world messy URLs.'],
+      ['javascript: scheme', 'Technically a valid URL. Browsers parse it fine — but then explicitly block execution from the address bar.'],
     ],
-    insight: `The fragment is NEVER transmitted to the server — this is why SPAs can use hash-based routing (#/about) as a zero-server-round-trip navigation. The WHATWG URL parser is intentionally more permissive than RFC 3986 for web compatibility reasons.`,
+    insight: `The #fragment trick is why single-page apps work without server changes: navigate to /dashboard#settings and the server only sees /dashboard. The client reads window.location.hash and renders the settings panel. Zero server round-trips for in-page navigation.`,
     diagramKey: 'url',
     sceneKey: 'url',
     seoDescription: 'How browsers parse URLs: WHATWG URL Standard, HSTS preload lists, Punycode encoding, and why URL fragments never reach the server.',
@@ -46,25 +53,27 @@ export const topics: Topic[] = [
     phase: 'Network',
     order: 2,
     title: 'DNS Resolution',
-    subtitle: 'Converting a hostname into an IP address via a layered cache chain',
-    example: `Resolving api.github.com:
-1. Browser DNS cache: miss (not seen recently)
-2. OS cache + /etc/hosts: miss
-3. Recursive resolver (8.8.8.8 or 1.1.1.1): miss — starts iterative resolution
-4. Root nameserver (a.root-servers.net): "ask .com TLD server"
-5. .com TLD nameserver: "ask ns1.github.com"
-6. GitHub authoritative NS returns A record: 140.82.114.5, TTL=60
+    subtitle: 'Turning a website name into the actual address your computer can connect to',
+    example: `You want api.github.com. Your computer knows names, not addresses — so it asks around:
 
-Total cold resolution: ~80ms. Answer cached at every level up to TTL.`,
+1. Browser's own memory: "Have I looked this up recently?" — No.
+2. Your computer's local list: also nothing.
+3. Your internet provider's lookup service (or 8.8.8.8 if you use Google's): "I don't know either, let me find out."
+4. That helper asks the internet's master directory: "Who handles .com names?"
+5. The .com registry says: "GitHub manages their own names. Ask them."
+6. GitHub's own name server answers: "That's 140.82.114.5. This answer is good for 60 seconds."
+
+The answer flows back and gets saved at every step — so next time it's instant.
+Cold first lookup: ~80ms. From cache: under 1ms.`,
     facts: [
-      ['TTL', 'Controls cache lifetime. Low = fresh but slower. High = fast but slow propagation.'],
-      ['Negative caching', 'NXDOMAIN is cached too — per SOA negative TTL. Fixing a typo takes time.'],
-      ['DoH', 'RFC 8484: DNS over HTTPS — encrypts queries, prevents ISP snooping'],
-      ['DNSSEC', 'Cryptographic chain-of-trust on records — authentication, not encryption'],
-      ['Root servers', '13 logical names, 1,600+ anycast instances globally'],
-      ['Chrome DNS cache', 'Independent of OS — inspectable at chrome://net-internals/#dns'],
+      ['Freshness timer (TTL)', 'Each DNS answer has an expiry. Low = always fresh but slow. High = fast but DNS changes take time to spread.'],
+      ['Negative caching', 'Even "this domain doesn\'t exist" gets cached. Fixing a typo in a domain name can take hours to propagate.'],
+      ['Encrypted DNS (DoH)', 'RFC 8484: DNS queries over HTTPS. Without it, your internet provider can see every site name you look up.'],
+      ['DNSSEC', 'Adds digital signatures to DNS answers — proves the answer wasn\'t tampered with in transit. Doesn\'t encrypt, just authenticates.'],
+      ['Root name servers', '13 names, but ~1,600 physical machines worldwide handling the same job via anycast routing.'],
+      ['Chrome\'s own DNS cache', 'Completely separate from your OS. Flushing your system DNS does nothing to Chrome. Check chrome://net-internals/#dns.'],
     ],
-    insight: `Browser DNS cache is completely independent of the OS resolver. Chrome keeps its own cache, inspectable at chrome://net-internals/#dns. Flushing the OS DNS cache does absolutely nothing to Chrome's internal cache. This trips up nearly every developer when testing DNS changes.`,
+    insight: `Chrome keeps its own DNS cache, completely separate from your operating system's. This trips up almost every developer the first time they test a DNS change: they flush the system cache, reload Chrome, and nothing changes — because Chrome is still serving its own cached answer. Fix: go to chrome://net-internals/#dns and clear it there.`,
     diagramKey: 'dns',
     sceneKey: 'dns',
     seoDescription: 'How DNS resolution works: the 5-level cache chain from browser to authoritative nameserver, TTLs, DoH, DNSSEC, and why Chrome has its own DNS cache.',
@@ -74,461 +83,515 @@ Total cold resolution: ~80ms. Answer cached at every level up to TTL.`,
     phase: 'Network',
     order: 3,
     title: 'TCP Connection',
-    subtitle: 'The 3-way handshake establishes a reliable ordered byte stream',
-    example: `Client at 192.168.1.5 connects to Server at 140.82.114.5:443
+    subtitle: 'A formal handshake before data flows — like establishing a phone call',
+    example: `Your computer (192.168.1.5) wants to talk to GitHub (140.82.114.5):
 
-• SYN:     client sends seq=1234567 (random ISN), syn=1
-• SYN-ACK: server replies seq=9876543, ack=1234568 (x+1)
-• ACK:     client sends ack=9876544 (y+1) — connection open
+→ You: "Hello, I'd like to connect. My starting message number is 1234567." (SYN)
+← Server: "Hello back. Got your number. Mine is 9876543. Expecting yours +1 next." (SYN-ACK)
+→ You: "Confirmed. Your number +1. We're connected." (ACK)
 
-Cost: 1 full RTT before TLS even starts.
-At 50ms RTT = 50ms wasted. HTTP/3 over QUIC eliminates this entirely.`,
+That's three messages — one full round trip — just to say hello.
+At 50ms away, that's 50ms of pure waiting before any data flows.
+Then TLS adds another round trip on top.
+
+HTTP/3 (the latest version) skips this entirely by using a smarter transport underneath.`,
     facts: [
-      ['ISN', 'Initial Sequence Number is random — prevents port reuse collisions and some spoofing'],
-      ['HOL blocking', 'HTTP/1.1 must return responses in order. HTTP/2 fixes with multiplexed streams.'],
-      ['CUBIC', 'Default Linux congestion control — optimised for high-bandwidth, high-latency links'],
-      ['BBR', "Google's modern congestion control: models bottleneck bandwidth, reacts to delay not loss"],
-      ['QUIC', 'HTTP/3: TCP replaced by QUIC over UDP. Eliminates handshake + TLS RTT overhead.'],
-      ['TIME_WAIT', '2×MSL post-close: up to 4 minutes. Can exhaust ephemeral ports under high churn.'],
+      ['Random starting numbers', 'Each connection picks a random starting sequence number — prevents old packets from a previous connection interfering.'],
+      ['In-order delivery', 'HTTP/1.1 must receive responses in order. One slow response blocks all others — called head-of-line blocking. HTTP/2 and 3 fix this.'],
+      ['Slow Start', 'New connections start sending data slowly and ramp up. This is why the first ~14KB loads fastest — it fits in the first burst.'],
+      ['QUIC (HTTP/3)', 'Replaces TCP with a UDP-based transport. Combines the TCP handshake and TLS in one step. Saves at least one round trip.'],
+      ['Connection reuse', 'Keep-Alive lets multiple requests share one TCP connection. Without it, every image would need its own handshake.'],
+      ['TIME_WAIT state', 'After closing, ports wait up to 4 minutes before reuse. High-traffic servers can run out of ports if closing connections too fast.'],
     ],
-    insight: `Slow Start is why the first ~14KB of a page loads faster than the rest: initial cwnd = 10 MSS (~14KB). Server-side rendering HTML pages under 14KB delivers dramatically better perceived performance because the entire HTML fits in the first TCP congestion window.`,
+    insight: `Slow Start is why pages under 14KB feel dramatically faster: that's the amount of data TCP sends in its very first burst. Server-side rendering your entire page HTML under 14KB means the whole document arrives in one shot. Above that, you're waiting for more rounds.`,
     diagramKey: 'tcp',
     sceneKey: 'tcp',
-    seoDescription: 'How TCP 3-way handshake works: SYN/SYN-ACK/ACK sequence, slow start, congestion control (CUBIC, BBR), and why HTTP/3 QUIC eliminates this RTT.',
+    seoDescription: 'How TCP 3-way handshake works: SYN/SYN-ACK/ACK sequence, slow start, congestion control, and why HTTP/3 QUIC eliminates this round trip.',
   },
   {
     id: 'tls-handshake',
     phase: 'Network',
     order: 4,
-    title: 'TLS 1.3 Handshake',
-    subtitle: 'Authenticated encryption negotiated in a single round trip',
-    example: `1. Client sends ClientHello: TLS 1.3, AES-256-GCM, ECDHE key share (Curve25519 public key)
-2. Server replies in one flight: ServerHello + X.509 certificate + ECDHE public key + digital signature + Finished
-3. Client verifies cert chain against trusted CA roots, derives session key from ECDHE shared secret, sends Finished
-4. Application data flows over the symmetric session key.
+    title: 'TLS Handshake',
+    subtitle: 'How two strangers agree on a secret code without ever saying it out loud',
+    example: `After TCP connects, you and GitHub's server need to set up encryption:
 
-TLS 1.3: 1 RTT. TLS 1.2: 2 RTT. QUIC 0-RTT: zero RTT for resumption (replay-attack risk).`,
+→ You: "Here's what I support: TLS 1.3, these cipher options. And a random number."
+← Server: "Here's my certificate — proof I'm really GitHub, signed by a trusted authority. Here's my public key."
+→ You: Check the certificate chain back to an authority your browser already trusts...
+    Both sides: use math (Diffie-Hellman key exchange) to independently calculate the same secret key — without ever sending the key itself.
+← Server: "Ready. Switching to encrypted mode."
+
+Every request from here is encrypted. Nobody watching the network can read it.
+
+TLS 1.3 does this in 1 round trip. Older TLS 1.2 needed 2.`,
     facts: [
-      ['Cipher suites', 'TLS 1.3 removed all weak suites. All remaining provide forward secrecy.'],
-      ['ECDHE', 'Elliptic Curve Diffie-Hellman Ephemeral. Curve25519 provides ~128-bit security.'],
-      ['OCSP stapling', 'Server attaches signed revocation status — client avoids extra CA round-trip'],
-      ['CT logs', 'Certificate Transparency (RFC 6962): all certs must be logged. Chrome enforces.'],
-      ['0-RTT', 'Session resumption with zero RTT. Risk: replay attacks. Safe only for idempotent GETs.'],
-      ['SNI', 'Server Name Indication: hostname in ClientHello so one IP can serve many TLS certs'],
+      ['Certificate chain', 'Your browser ships with ~150 trusted root authorities. GitHub\'s cert is signed by one — that\'s how you know it\'s real.'],
+      ['The key exchange trick', 'Diffie-Hellman lets both sides independently compute the same secret from public information. Mathematical magic.'],
+      ['TLS 1.3 vs 1.2', 'TLS 1.3 cuts the handshake from 2 round trips to 1 by sending more information upfront. Saves 50–100ms.'],
+      ['0-RTT resumption', 'Returning visitors can send their first request alongside the TLS handshake — zero extra round trips. Slight replay risk.'],
+      ['Certificate Transparency', 'Every certificate is logged in public ledgers. Lets anyone audit whether a CA is issuing fake certs.'],
+      ['SNI (Server Name)', 'Lets one server hold many certificates. The domain name is sent unencrypted in the handshake so the server picks the right cert.'],
     ],
-    insight: `Certificate Transparency (CT) is why Google caught Symantec mis-issuing certificates in 2017. Every certificate must appear in a public, append-only log before Chrome trusts it. This shifted PKI from "trust us" to "prove it, publicly, forever."`,
+    insight: `The server name (SNI) is sent in plaintext during the TLS handshake — which means your ISP or network can see which sites you visit, even on HTTPS. You can't read the content of the request, but the domain is visible. This is why Encrypted Client Hello (ECH) exists — it encrypts the SNI too.`,
     diagramKey: 'tls',
     sceneKey: 'tls',
-    seoDescription: 'How TLS 1.3 handshake works in 1 RTT: ECDHE key exchange, certificate verification, forward secrecy, and Certificate Transparency logs.',
+    seoDescription: 'How TLS handshake works: certificate chain, Diffie-Hellman key exchange, TLS 1.3 improvements, and why HTTPS still leaks the domain name.',
   },
   {
-    id: 'http-protocol',
+    id: 'http-request',
     phase: 'Network',
     order: 5,
-    title: 'HTTP Protocol',
-    subtitle: 'Request/response format and the evolution from 1.1 to 3',
-    example: `GET /users/torvalds HTTP/1.1
-Host: api.github.com
-Authorization: Bearer ghp_xxx
-Accept: application/vnd.github.v3+json
+    title: 'HTTP Request',
+    subtitle: 'A structured conversation between your browser and the server',
+    example: `Your browser sends a text message to GitHub — here's what it looks like:
 
-HTTP/1.1 200 OK
+GET /users/torvalds HTTP/2
+Host: api.github.com
+Accept: application/json
+Authorization: Bearer ghp_xxxx
+User-Agent: Mozilla/5.0 (Chrome/124)
+Accept-Encoding: gzip, br
+
+↑ That's it. Plain text (then encrypted by TLS). "GET" means "give me this".
+The server responds:
+
+HTTP/2 200 OK
 Content-Type: application/json
+Content-Encoding: br (compressed)
 Cache-Control: max-age=60
 X-RateLimit-Remaining: 58
 
-{"login":"torvalds","id":1024,...}`,
+{ "login": "torvalds", "public_repos": 8 ... }
+
+HTTP/2 sends multiple of these conversations at once over the same connection — in parallel.`,
     facts: [
-      ['HTTP/1.1 HOL', 'Browsers open 6 parallel connections per origin as a head-of-line blocking workaround'],
-      ['HTTP/2 HPACK', 'Header compression: static+dynamic tables. 800-byte headers → ~50 bytes on repeats'],
-      ['103 Early Hints', 'Server sends preload hints before final response. Replaced Server Push.'],
-      ['Server Push', 'Deprecated in Chrome 2022 — pushed already-cached resources, wasting bandwidth'],
-      ['Status codes', '1xx info, 2xx success, 3xx redirect, 4xx client error, 5xx server error'],
-      ['HTTP/3 QUIC', 'UDP-based: 0-RTT, per-stream retransmission, connection migration (WiFi → LTE)'],
+      ['HTTP verbs', 'GET=fetch, POST=send new data, PUT=replace, PATCH=update part of it, DELETE=remove. The verb tells the server the intent.'],
+      ['Status codes', '2xx=success, 3xx=redirect, 4xx=your mistake (404=not found), 5xx=server\'s mistake. 418 I\'m a Teapot is a real code.'],
+      ['HTTP/2 multiplexing', 'Multiple requests in parallel over one connection. Kills the "6 connections per domain" limit of HTTP/1.1.'],
+      ['HTTP/3 over QUIC', 'Same HTTP semantics, but over UDP instead of TCP. No more TCP head-of-line blocking. Faster on lossy networks.'],
+      ['Compression', 'Brotli (br) compresses text ~20% better than gzip. Enabled by Accept-Encoding. Most APIs and pages use it.'],
+      ['CORS preflight', 'Cross-origin POST/PUT/PATCH sends an OPTIONS request first to ask permission. Adds a round trip.'],
     ],
-    insight: `HTTP/2 Server Push failed because the server cannot know what is in the client's cache. 103 Early Hints fixes this: the server sends a 103 informational response with Link: preload headers, and the browser decides whether to fetch — because it already knows its cache state.`,
+    insight: `The HTTP method is just text — nothing enforces that a GET doesn't modify data server-side. By convention GET should be safe and idempotent. But plenty of APIs use GET with side effects. This is why browser prefetch can cause unexpected mutations if the server doesn't follow the convention.`,
     diagramKey: 'http',
     sceneKey: 'http',
-    seoDescription: 'How HTTP/1.1, HTTP/2, and HTTP/3 work: request/response format, HPACK compression, multiplexing, QUIC, and why Server Push was deprecated.',
+    seoDescription: 'How HTTP requests and responses work: headers, status codes, HTTP/2 multiplexing, compression, and CORS preflight requests.',
   },
   {
     id: 'html-parsing',
     phase: 'Browser',
     order: 6,
-    title: 'HTML Parsing → DOM',
-    subtitle: 'Bytes stream in, the tokenizer builds the tree incrementally',
-    example: `Parser encounters: <link rel="stylesheet" href="app.css">
-  — Blocks rendering (CSS is render-blocking)
-  — BUT preload scanner fires fetch for app.css immediately
+    title: 'HTML Parsing',
+    subtitle: 'Converting raw text into a living tree the browser can work with',
+    example: `The server sends plain text. The browser turns it into a tree of objects:
 
-Parser encounters: <script src="app.js"> (no async/defer)
-  — Parser STOPS completely
-  — Script fetched + executed
-  — Parser resumes after execution
+<html>              → creates the root node
+  <head>            → child of html
+    <script src=""> → STOPS PARSING. Downloads the script. Runs it. Then continues.
+  </head>
+  <body>            → child of html
+    <div id="app">  → child of body
+      <p>Hello</p>  → child of div
 
-async: fetch in parallel, execute immediately (may run before DOMContentLoaded)
-defer: fetch in parallel, execute in order after HTML parsed, before DOMContentLoaded`,
+Result: a Document Object Model (DOM) tree.
+JavaScript can walk this tree and change it at any time.
+
+The parser is deliberately error-tolerant — it will try to make sense of broken HTML rather than show an error.`,
     facts: [
-      ['Parser blocking', '<script> without async/defer halts tokenization until execution completes'],
-      ['async', 'Fetch parallel, execute as-downloaded. Unordered. May fire before DOMContentLoaded.'],
-      ['defer', 'Fetch parallel, execute in source order after parse, before DOMContentLoaded'],
-      ['Preload scanner', 'Lookahead: fires fetches for link, img, script src while parser is blocked'],
-      ['DOMContentLoaded', 'HTML parsed + deferred scripts done. NOT waiting for images, fonts, CSS.'],
-      ['load event', 'Everything fully loaded: images, stylesheets, subframes, fonts'],
+      ['Render-blocking scripts', 'A <script> without async or defer stops HTML parsing completely until it downloads and runs.'],
+      ['Error recovery', 'The HTML parser never throws errors. It silently fixes missing closing tags, misplaced elements, and typos.'],
+      ['async vs defer', 'async: download in parallel, run immediately when ready (may be out of order). defer: run after parsing, in order.'],
+      ['Preload scanner', 'While a script blocks parsing, a separate background scanner keeps looking ahead for images/fonts to start downloading.'],
+      ['innerHTML gotcha', 'Setting innerHTML re-parses HTML from scratch. Every child node gets destroyed and recreated — even if unchanged.'],
+      ['Comment nodes', 'Comments are real nodes in the DOM tree, accessible via JavaScript. Some frameworks use them as markers.'],
     ],
-    insight: `The preload scanner is one of the highest-impact browser optimisations ever built. Without it, a single render-blocking script would stall ALL resource fetching. In DevTools waterfall, resources begin loading while the parser is blocked — that is the preload scanner firing. Firefox calls it "speculative parsing."`,
+    insight: `The preload scanner is why <link rel="preload"> works so well: it runs in parallel with the main parser and script execution. Even if a render-blocking script stops parsing for 500ms, the preload scanner has already started fetching your hero image. Remove the preload hint and that 500ms stall costs you image load time too.`,
     diagramKey: 'html',
     sceneKey: 'html',
-    seoDescription: 'How browsers parse HTML into the DOM: the tokenizer, parser blocking scripts, async vs defer, preload scanner, and DOMContentLoaded vs load.',
+    seoDescription: 'How HTML parsing works: the DOM tree, render-blocking scripts, async vs defer, preload scanner, and error recovery.',
   },
   {
     id: 'css-parsing',
     phase: 'Browser',
     order: 7,
-    title: 'CSS Parsing → CSSOM',
-    subtitle: 'Cascade resolution: which declaration wins for each property on each element',
-    example: `For element <p class="text" id="intro">:
+    title: 'CSS Parsing',
+    subtitle: 'Building the style rulebook before a single pixel gets painted',
+    example: `The browser processes your CSS into two structures:
 
-Rule 1: p { color: gray }          — specificity (0,0,0,1)
-Rule 2: .text p { color: red }     — specificity (0,0,1,1) — class + element
-Rule 3: #intro { color: blue }     — specificity (0,1,0,0) — ID wins!
+1. CSSOM (CSS Object Model) — a tree matching the DOM:
+   body { font-size: 16px }  →  root style rule
+   .card { padding: 16px }   →  applies to .card nodes
+   .card p { color: red }    →  applies to p inside .card
 
-Final computed value: color: blue
+2. Cascade resolution — for each element, figure out which rules win:
+   - Specificity: #id > .class > element
+   - !important overrides everything (use sparingly)
+   - Later rules beat earlier ones if equal specificity
 
-ALL external CSS blocks rendering — full CSSOM must be built before layout.`,
+Until the CSSOM is complete, the browser pauses rendering.
+(One slow CSS file = white screen while it downloads.)`,
     facts: [
-      ['Specificity', '(inline, IDs, classes/attrs/pseudoclasses, elements) — compared left to right'],
-      ['Source order', 'Equal specificity? Last declaration wins. This is the "C" in CSS.'],
-      ['!important', 'Overrides all normal declarations — but higher-spec !important still wins'],
-      ['Custom properties', '--foo: bar — cascades and inherits like any property'],
-      ['@layer', 'CSS Cascade Layers (2022): explicit cascade order without specificity hacks'],
-      ['Right-to-left', 'Selector matching runs right-to-left. * (universal) is most expensive.'],
+      ['Render-blocking CSS', '<link rel="stylesheet"> blocks rendering until fully downloaded and parsed. Unlike JS, there\'s no async CSS.'],
+      ['Specificity scoring', 'IDs score 100, classes 10, elements 1. The highest score wins. !important beats everything.'],
+      ['Critical CSS inlining', 'Putting above-the-fold styles in a <style> tag in <head> lets the first paint happen before external CSS loads.'],
+      ['CSS containment', 'contain: layout tells the browser style changes here don\'t affect the rest of the page. Speeds up recalculation.'],
+      ['Unused CSS cost', 'Browser parses ALL CSS rules even if they match nothing. Large unused CSS files slow down every page — not just pages that use them.'],
+      ['Custom properties (variables)', 'CSS variables are resolved at paint time, not parse time — they can be changed by JavaScript without re-parsing CSS.'],
     ],
-    insight: `Selector matching runs RIGHT-TO-LEFT. For "div p span": browser finds all span elements, checks if parent is p, checks if ancestor is div. The universal selector * is the most expensive — every element is a candidate. CSS Cascade Layers (@layer, 2022) is the biggest cascade change in a decade.`,
+    insight: `CSS is render-blocking but has no async equivalent. The trick is Critical CSS: extract just the styles needed for above-the-fold content and inline them in a <style> tag. The rest loads non-blocking via a media trick: <link rel="stylesheet" media="print" onload="this.media='all'">. Ugly but effective.`,
     diagramKey: 'css',
     sceneKey: 'css',
-    seoDescription: 'How browsers parse CSS and build the CSSOM: cascade, specificity (inline/ID/class/element), right-to-left selector matching, and CSS Cascade Layers.',
+    seoDescription: 'How CSS parsing works: CSSOM construction, cascade specificity, render-blocking behavior, and critical CSS optimization.',
   },
   {
     id: 'render-tree',
     phase: 'Render',
     order: 8,
     title: 'Render Tree',
-    subtitle: 'DOM + CSSOM merge: only visible nodes receive layout boxes',
-    example: `DOM node: <div class="hidden" style="display:none">...</div>
-  — CSSOM computes display:none
-  — EXCLUDED from render tree (no box, no space, no paint)
+    subtitle: 'Merging HTML structure and CSS styles into one thing the browser can draw',
+    example: `DOM + CSSOM → Render Tree (only what's visible):
 
-DOM node: <div style="visibility:hidden">...</div>
-  — INCLUDED in render tree
-  — Occupies space, generates box, painted transparent
+DOM node             CSSOM rule           Render tree?
+<html>               display: block       ✓ included
+<head>               (no visual style)    ✗ skipped
+<script>             (no visual style)    ✗ skipped
+<body>               display: block       ✓ included
+<div class="card">   display: flex        ✓ included
+<p style="display:none"> display: none    ✗ excluded (not visible)
+<span>               visibility: hidden   ✓ included (takes up space, just invisible)
 
-CSS ::before / ::after pseudo-elements:
-  — EXIST in render tree, NOT in DOM`,
+The render tree only contains elements that affect the visual layout.
+display:none = gone from render tree.
+visibility:hidden = still in render tree (takes up space).`,
     facts: [
-      ['display:none', 'Excluded from render tree — no layout box, no space, no paint'],
-      ['visibility:hidden', 'Included — occupies space, transparent. Hides without layout shift.'],
-      ['Pseudo-elements', '::before, ::after exist in render tree but not in the DOM'],
-      ['Anonymous boxes', 'Browser creates implicit wrappers per CSS spec (e.g. text node in a table)'],
-      ['Stacking contexts', 'z-index, opacity<1, transform, filter all create new stacking contexts'],
-      ['content-visibility', 'content-visibility:auto (Chrome 85+) skips subtree render for off-screen elements'],
+      ['display:none vs visibility:hidden', 'display:none removes the element from layout entirely. visibility:hidden keeps the space but hides the content.'],
+      ['Pseudo-elements', '::before and ::after from CSS exist in the render tree even though they\'re not in the DOM.'],
+      ['Shadow DOM', 'Web components can have their own private render subtree, isolated from the main document styles.'],
+      ['CSS counters', 'Implemented in the render tree — counter() increments as the renderer walks the tree.'],
+      ['Render tree invalidation', 'Changing a class triggers CSSOM re-calculation, render tree rebuild, then layout. Batch DOM changes to avoid this.'],
+      ['Flat tree', 'Shadow DOM and slots get "flattened" into a single tree for rendering — separate from the logical DOM structure.'],
     ],
-    insight: `Toggling display:none to display:block is the most expensive show/hide operation — it forces render tree reconstruction. For animations, use visibility + opacity instead. content-visibility:auto on long scrolling lists cuts layout time by 50%+ by lazily constructing the render tree.`,
+    insight: `display:none is more expensive to toggle than visibility:hidden. Toggling display:none causes layout for the entire surrounding context — the tree has to be rebuilt around the gap. visibility:hidden just skips the paint step. If you're hiding/showing things frequently (tabs, dropdowns), consider opacity:0 + pointer-events:none instead — no layout, no paint, GPU-only.`,
     diagramKey: 'rt',
     sceneKey: 'renderTree',
-    seoDescription: 'How the browser builds the Render Tree by merging DOM and CSSOM: display:none vs visibility:hidden, pseudo-elements, stacking contexts, and content-visibility.',
+    seoDescription: 'How the render tree is built by combining DOM and CSSOM: what gets included, what gets excluded, and the difference between display none and visibility hidden.',
   },
   {
-    id: 'layout-reflow',
+    id: 'layout',
     phase: 'Render',
     order: 9,
-    title: 'Layout (Reflow)',
-    subtitle: 'Computing exact geometry — position, size, and box model for every node',
-    example: `Forced Synchronous Layout — the #1 layout performance killer:
+    title: 'Layout',
+    subtitle: 'Calculating exactly where every element sits and how big it is',
+    example: `The browser walks the render tree and calculates geometry:
 
-// BAD: FSL on every loop iteration (N reflows)
-for (const el of items) {
-  el.style.width = container.offsetWidth + 'px'  // READ forces flush
-  el.className = 'wide'                           // WRITE invalidates
-}
+<div class="container">   → x:0, y:0, width:1280, height:?
+  <div class="sidebar">   → x:0, y:0, width:256, height:800
+  <div class="main">      → x:256, y:0, width:1024, height:?
+    <p>Hello world</p>    → x:256, y:16, width:1024, height:24
 
-// GOOD: batch reads then writes (1 reflow total)
-const w = container.offsetWidth   // one read
-for (const el of items) el.style.width = w + 'px'`,
+This is expensive. Any of these trigger a full re-layout:
+• Adding/removing DOM elements
+• Changing width, height, padding, margin, font-size
+• Reading offsetWidth or getBoundingClientRect() after a DOM change (forced layout)
+
+One accidental layout inside a loop = "layout thrashing" = jank.`,
     facts: [
-      ['BFC', 'Block Formatting Context: contains floats, prevents margin collapse leaking'],
-      ['FSL', 'Forced Synchronous Layout: write DOM then immediately read layout property = reflow'],
-      ['Containing block', 'Determines % sizes — set by nearest positioned/transformed ancestor'],
-      ['Layout thrashing', 'Read-write-read-write loop = FSL × N. Fix: batch all reads, then all writes.'],
-      ['contain:layout', 'CSS containment: limits reflow scope to subtree, avoids full-page reflow'],
-      ['getBoundingClientRect', 'Forces layout flush if DOM has been written since last frame.'],
+      ['Flow vs positioned', 'Block elements stack vertically by default. position:absolute/fixed removes them from normal flow.'],
+      ['Flexbox and Grid', 'Both are more efficient than float-based layouts because the browser can calculate them in fewer passes.'],
+      ['Layout thrashing', 'Reading a layout property (offsetWidth) after writing to the DOM forces the browser to recalculate immediately. Do all writes first, then all reads.'],
+      ['Intrinsic sizing', 'min-content, max-content, and fit-content let content determine its own size — useful for responsive components.'],
+      ['Contain: layout', 'Tells the browser changes inside this element don\'t affect outside layout. Massive performance win for isolated components.'],
+      ['Subgrid', 'CSS Subgrid lets children align to a parent grid — previously required JavaScript to achieve.'],
     ],
-    insight: `getBoundingClientRect(), offsetWidth, offsetHeight, scrollTop — ALL force a layout flush if the DOM has been modified since the last frame. In Chrome DevTools Performance panel, look for purple "Layout" bars triggered mid-frame. The fix is always: batch all reads before writes.`,
+    insight: `The classic layout thrashing pattern: you write a style (el.style.width = '100px'), then read a layout value (el.offsetWidth) in a loop. Each read forces the browser to flush pending layout calculations first. Result: hundreds of layouts per frame instead of one. FastDOM and modern frameworks batch these to avoid it.`,
     diagramKey: 'layout',
     sceneKey: 'layout',
-    seoDescription: 'How browser layout (reflow) works: CSS box model, forced synchronous layout (FSL), layout thrashing, and how to batch DOM reads and writes for 60fps.',
-    codeDemo: {
-      bad: `// Layout thrashing: N reflows
-for (const el of items) {
-  // READ forces layout flush ↓
-  const w = container.offsetWidth
-  // WRITE invalidates layout ↑
-  el.style.width = w + 'px'
-}`,
-      good: `// Batch: 1 read, then N writes
-const w = container.offsetWidth   // single read
-
-for (const el of items) {
-  el.style.width = w + 'px'   // write only
-}`,
-      label: 'Layout Thrashing vs Batched Reads',
-    },
+    seoDescription: 'How browser layout works: the box model, flow vs positioned elements, flexbox/grid efficiency, and layout thrashing.',
   },
   {
     id: 'paint',
     phase: 'Render',
     order: 10,
     title: 'Paint',
-    subtitle: 'Building display lists — drawing commands, not pixels yet',
-    example: `After layout, browser traverses stacking contexts in paint order:
-1. Background (background-color, background-image)
-2. Borders
-3. Float children
-4. Inline content (text, replaced elements like img)
-5. Outlines
+    subtitle: 'Turning geometry into actual pixels — color, shadows, text, borders',
+    example: `Layout calculated positions. Paint fills them in:
 
-Elements with transform, opacity, will-change are promoted to compositor layers —
-they get their own display list and bypass repaint during animation.`,
+For each render layer, the browser records drawing commands:
+• "Draw rect at (0,0) size (1280×800) fill #08080F"
+• "Draw text 'Hello' at (256,16) font 16px Geist color #FFFFFF"
+• "Draw box-shadow: 0 4px 16px rgba(0,0,0,0.5)"
+• "Draw border-radius: clip rect to rounded shape"
+
+These commands go into a "display list" — not yet actual pixels.
+The actual pixel-filling (rasterization) can happen on CPU or be handed off to the GPU.
+
+What triggers a repaint:
+• Changing color, background, box-shadow, visibility
+• NOT changing transform or opacity (those skip paint entirely!)`,
     facts: [
-      ['Display list', 'Serialisable drawing commands: drawRect, fillText, drawImage. Not pixels yet.'],
-      ['Dirty regions', 'Only changed element bounding rects are repainted, not the whole page'],
-      ['will-change', 'Pre-promotes element to compositor layer before animation starts'],
-      ['box-shadow', 'Cannot GPU-accelerate — forces large dirty rect. Use filter:drop-shadow instead.'],
-      ['Tile rasterisation', 'Painted layers rasterised in 256×256 or 512×512 tiles'],
-      ['Layer count', 'Too many layers = GPU VRAM exhaustion = blank tiles. Profile in DevTools > Layers.'],
+      ['Display list', 'Paint produces a list of drawing commands, not pixels directly. This list can be replayed for partial updates.'],
+      ['Rasterization', 'Converting those commands into actual pixels. Can happen on the CPU or be tiled and sent to the GPU.'],
+      ['Paint flashing', 'Chrome DevTools can highlight which parts of the page are repainting — look for the green overlay in Rendering panel.'],
+      ['will-change hint', 'will-change: transform tells the browser "this will animate" — moves it to its own layer proactively.'],
+      ['Text rendering', 'Text is the most complex paint operation: font hinting, sub-pixel rendering, emoji fallbacks, right-to-left support.'],
+      ['SVG vs Canvas', 'SVG is painted by the browser\'s paint engine (scalable, accessible). Canvas is a raw pixel buffer you control via JavaScript.'],
     ],
-    insight: `box-shadow with large blur is one of the most expensive CSS properties — it generates a massive dirty rect that must be software-rasterised every frame. For animated shadows: use filter:drop-shadow (GPU-accelerated) or animate the opacity of a ::after pseudo-element with a pre-rendered shadow.`,
+    insight: `opacity and transform are the only two CSS properties that skip paint entirely and go straight to the compositor. Every other animatable property (color, width, background, even border-radius) triggers paint on every frame. This is why "animate only transform and opacity" is the golden rule of smooth animation.`,
     diagramKey: 'paint',
     sceneKey: 'paint',
-    seoDescription: 'How browser paint works: display lists, dirty region tracking, compositor layer promotion, will-change, box-shadow performance, and tile rasterisation.',
+    seoDescription: 'How browser painting works: display lists, rasterization, what triggers repaints, and why transform and opacity are the smooth animation exceptions.',
   },
   {
     id: 'compositing',
     phase: 'Render',
     order: 11,
     title: 'Compositing',
-    subtitle: 'The GPU assembles promoted layers into the final frame at 60fps',
-    example: `// JANK — triggers layout + paint every frame
-@keyframes slide {
-  from { left: 0 }
-  to   { left: 400px }
-}
+    subtitle: 'The GPU assembles the final image from separate layers like Photoshop',
+    example: `After paint, the browser splits the page into layers and sends them to the GPU:
 
-// SMOOTH — compositor-only, no layout/paint
-@keyframes slide {
-  from { transform: translateX(0) }
-  to   { transform: translateX(400px) }
-}
+Layer 0 (base): background, text, static content  → painted to texture
+Layer 1 (fixed header): position:fixed nav         → separate texture
+Layer 2 (modal overlay): transform/opacity anim   → separate texture
+Layer 3 (video):  <video> element                 → separate texture
 
-Only transform and opacity are compositor-only.
-Everything else triggers at minimum a repaint.`,
+GPU blends them in order at 60fps:
+Layer 0 → Layer 1 → Layer 2 → Layer 3 = final frame
+
+When you do transform: translateX(100px), only Layer 2's position changes.
+The GPU just repositions the texture — no repaint needed. That's why it's fast.`,
     facts: [
-      ['GPU-only', 'transform + opacity: no layout, no paint. 60fps+ even with busy main thread.'],
-      ['Layer memory', '1920×1080 × 4 bytes = 8.3 MB GPU VRAM per layer. Multiply by layer count.'],
-      ['Compositor thread', 'Runs independent of JS main thread. JS jank does NOT affect composited animations.'],
-      ['Main thread jank', 'Long JS task blocks commit to compositor → dropped frames'],
-      ['Scroll compositing', 'Compositor handles scroll natively. Non-composited fixed elements force main thread.'],
-      ['Layer explosion', '100 will-change:transform elements = 100 GPU layers. Can exhaust VRAM silently.'],
+      ['Compositing thread', 'Runs on its own thread, separate from JavaScript. Even if JS is busy, scrolling can stay smooth.'],
+      ['Layer promotion triggers', 'transform, opacity, will-change, position:fixed, <video>, <canvas>, and some filters create new layers.'],
+      ['Layer explosion', 'Too many layers wastes GPU memory. A page with 200 composited layers can use hundreds of MB of GPU RAM.'],
+      ['Scroll jank', 'If a scroll event listener calls preventDefault(), it blocks the compositor thread and causes scroll jank.'],
+      ['Passive event listeners', '{ passive: true } on scroll/touch events tells the browser you won\'t call preventDefault() — unlocks smooth compositing.'],
+      ['CSS will-change', 'Moves an element to its own layer before animation starts. Prevents the "first frame flash" of layer promotion.'],
     ],
-    insight: `React Concurrent Mode's scheduler uses postMessage (a macrotask) to yield between work chunks — each postMessage recipient is a separate macrotask, giving the browser compositor a chance to commit frames between React rendering increments. This is the mechanism behind "interruptible rendering" in React 18+.`,
+    insight: `Passive event listeners ({ passive: true }) are one of the highest-impact one-liners in frontend performance. By promising you won't call preventDefault(), you let the compositor thread handle scroll and touch independently of JS. Chrome shows a warning in DevTools when it detects non-passive scroll listeners blocking compositing.`,
     diagramKey: 'composite',
     sceneKey: 'compositing',
-    seoDescription: "How GPU compositing works: compositor layers, transform/opacity fast path, layer memory cost, why JS jank drops frames, and React 18's concurrent scheduler.",
-    codeDemo: {
-      bad: `/* Triggers layout + paint every frame */
-@keyframes slide {
-  from { left: 0px }
-  to   { left: 400px }
-}
-
-.box { position: relative; animation: slide 1s; }`,
-      good: `/* Compositor-only: no layout, no paint */
-@keyframes slide {
-  from { transform: translateX(0) }
-  to   { transform: translateX(400px) }
-}
-
-.box { animation: slide 1s; }`,
-      label: 'Layout-triggering vs Compositor-only Animation',
-    },
+    seoDescription: 'How browser compositing works: GPU layers, the compositor thread, why transform/opacity are fast, layer promotion, and passive event listeners.',
   },
   {
-    id: 'javascript-engine',
+    id: 'v8-engine',
     phase: 'Execute',
     order: 12,
-    title: 'JavaScript Engine (V8)',
-    subtitle: 'From source text to optimised machine code via two-tier compilation',
+    title: 'V8 Engine',
+    subtitle: 'How JavaScript goes from text to machine code — faster than you\'d expect',
     example: `function add(a, b) { return a + b }
 
-// After 1000 calls with numbers:
-// TurboFan assumes a, b are always numbers
-// Compiles: ADD rax, rbx (single CPU instruction)
+// First call: V8 interprets it slowly via Ignition (the interpreter)
+add(1, 2)   // interpreted bytecode, ~50ns
 
-// Type violation causes deoptimisation:
-add('hello', 'world')
-// TurboFan discards JIT code, falls back to Ignition
+// After enough calls, TurboFan (the compiler) kicks in:
+// V8 assumes: "a and b are always numbers. I'll compile a fast number-add."
+add(3, 4)   // compiled machine code, ~1ns
 
-// Hidden class property order matters:
-const a = {}; a.x = 1; a.y = 2   // C0 → C1 → C2
-const b = {}; b.y = 1; b.x = 2   // Different order → C3 (cache miss!)`,
+// But if you break the assumption:
+add("hello", "world")  // strings! V8 "deoptimizes" back to slow interpreter
+
+This is why TypeScript and consistent types matter for performance.
+V8 loves predictable code.`,
     facts: [
-      ['Ignition', 'Bytecode interpreter — fast startup, runs all functions on first execution'],
-      ['TurboFan', 'JIT compiler — activates for hot functions after type feedback from Ignition'],
-      ['Inline caches', 'Monomorphic (1 type) = fastest. Polymorphic (2–4) = slower. Megamorphic (5+) = no opt.'],
-      ['Hidden classes', 'Internal structural type per unique property order. Same shape = O(1) access.'],
-      ['Orinoco GC', 'Generational: Scavenger for young gen (parallel, fast). Mark-Compact for old gen.'],
-      ['Deopt', 'Type assumption violated → TurboFan discards JIT code, latency spike on hot path.'],
+      ['Ignition (interpreter)', 'Runs JavaScript bytecode line by line. Slow but starts immediately — no compilation wait.'],
+      ['TurboFan (compiler)', 'Watches which functions run often, compiles them to optimised machine code. Functions that matter get fast.'],
+      ['Hidden classes', 'V8 tracks object shapes internally. Objects with the same properties in the same order share a fast hidden class.'],
+      ['Inline caches', 'V8 remembers "last time this property lookup hit offset 8" and shortcuts future lookups. Type changes break this.'],
+      ['Garbage collection', 'Memory is freed in short "minor GC" bursts for young objects, and longer "major GC" pauses for old ones.'],
+      ['Just-in-time (JIT)', 'V8 compiles code while running it, not upfront. The warm-up cost is why long-running Node processes get faster over time.'],
     ],
-    insight: `The ORDER you define object properties matters for performance. Objects created with different property orders produce divergent hidden class chains — inline caches go megamorphic and V8 cannot optimise property access. Always define all properties in the constructor in the same order.`,
+    insight: `Adding properties to objects in inconsistent orders creates different "hidden classes" in V8, forcing it to use slow generic property lookups. Always initialize object properties in the same order, and avoid adding properties after creation. This is the main reason {} literals are often faster than Object.assign() in hot paths.`,
     diagramKey: 'v8',
     sceneKey: 'v8',
-    seoDescription: 'How V8 JavaScript engine works: Ignition bytecode interpreter, TurboFan JIT compiler, hidden classes, inline caches, deoptimisation, and garbage collection.',
+    seoDescription: 'How V8 JavaScript engine works: Ignition interpreter, TurboFan JIT compiler, hidden classes, inline caches, and deoptimization.',
   },
   {
     id: 'event-loop',
     phase: 'Execute',
     order: 13,
     title: 'Event Loop',
-    subtitle: 'Single-threaded concurrency via a precisely prioritised queue system',
-    example: `// How many renders happen here?
-async function example() {
-  doSomething()            // sync
-  await Promise.resolve()  // microtask checkpoint
-  doMoreWork()            // still in microtask — no render yet!
-}
-// Zero renders! Microtasks drain to completion before render.
+    subtitle: 'How JavaScript does one thing at a time — but still feels concurrent',
+    example: `JavaScript is single-threaded: one thing at a time.
+The event loop is how it handles waiting without blocking:
 
-// To yield to the renderer:
-await new Promise(r => setTimeout(r, 0))
-// This queues a macrotask — render can happen before it fires`,
+console.log("1")                     // runs now
+setTimeout(() => console.log("3"))   // schedules for "later" (macro task)
+Promise.resolve().then(() => console.log("2"))  // micro task (runs first!)
+console.log("4")                     // runs now
+
+Output: 1 → 4 → 2 → 3
+
+The rule:
+• Run all synchronous code first
+• Then drain ALL microtasks (Promises, queueMicrotask)
+• Then render the frame (if needed)
+• Then run ONE macro task (setTimeout, setInterval, I/O)
+• Repeat`,
     facts: [
-      ['Macrotasks', 'setTimeout, setInterval, MessageChannel, I/O, script loading. ONE per loop tick.'],
-      ['Microtasks', 'Promise callbacks, queueMicrotask, MutationObserver. ALL drain before any render.'],
-      ['rAF timing', 'requestAnimationFrame fires AFTER microtasks, BEFORE layout/paint. Ideal for DOM writes.'],
-      ['Starvation', 'Infinite Promise chain blocks rendering forever. Use setTimeout(fn,0) to yield.'],
-      ['Web Workers', 'Independent event loops. No shared memory by default; SharedArrayBuffer+Atomics for sharing.'],
-      ['scheduler.yield()', 'scheduler.yield() (Chrome 115+) — explicit yield between long tasks'],
+      ['Call stack', 'Where synchronous code runs. One function at a time, last in first out. If it\'s never empty, the page freezes.'],
+      ['Microtask queue', 'Promise .then() callbacks go here. The entire queue drains between every macro task — before any rendering.'],
+      ['Macro task queue', 'setTimeout, setInterval, I/O, user events. One per loop iteration. Rendering happens between macro tasks.'],
+      ['requestAnimationFrame', 'Runs just before the browser paints. Ideal for visual updates — guaranteed to run at 60fps cadence.'],
+      ['Long tasks', 'Anything taking more than 50ms on the main thread blocks rendering. Break with setTimeout(0) or Web Workers.'],
+      ['Web Workers', 'True parallel threads for JavaScript — but no DOM access. Great for heavy computation without blocking the UI.'],
     ],
-    insight: `Two await statements do NOT create two render opportunities — they create two microtask checkpoints. The renderer can only run between macrotasks. React's concurrent mode scheduler uses postMessage (macrotask) to yield between rendering chunks, allowing the browser to paint between React work segments.`,
+    insight: `Microtasks (Promises) drain completely before the browser gets to render. A loop that resolves millions of promises will hold the browser hostage even though each individual .then() looks harmless. If you need to do async work without blocking rendering, use setTimeout(fn, 0) to yield to the browser between chunks — it splits work into separate macro tasks.`,
     diagramKey: 'evloop',
     sceneKey: 'eventLoop',
-    seoDescription: 'How the JavaScript event loop works: macrotask vs microtask queues, requestAnimationFrame timing, rendering pipeline, and how React 18 uses postMessage to yield.',
+    seoDescription: 'How the JavaScript event loop works: call stack, microtask queue, macro tasks, requestAnimationFrame, and why long tasks block rendering.',
   },
   {
     id: 'http-caching',
     phase: 'Optimize',
     order: 14,
     title: 'HTTP Caching',
-    subtitle: 'The right headers to eliminate every unnecessary network byte',
-    example: `Optimal caching strategy:
+    subtitle: 'The fastest request is the one that never had to leave your device',
+    example: `Browser asks: "Do I already have this? Is it still fresh?"
 
-// HTML files (can change any deploy):
-Cache-Control: no-cache
-// Revalidates every time, serves from cache on 304
+First visit to github.com/avatar.png:
+→ GET /avatar.png
+← 200 OK + Cache-Control: max-age=31536000 (cache for 1 year)
+  Browser saves it with an expiry date.
 
-// All other assets (content-hashed filenames):
-Cache-Control: max-age=31536000, immutable
-// bundle.a3b2c1.js — cached 1 year, never revalidated
-// The HTML delivers updated fingerprints when assets change`,
+Second visit (within a year):
+→ Browser: "I have it, not expired." Serves from memory. No network request at all.
+
+After a year, or with a changed URL:
+→ GET /avatar.png (or /avatar-v2.png)
+← 200 OK + new response. Cache updated.
+
+This is "cache busting" — change the filename to force a fresh download.`,
     facts: [
-      ['max-age', 'Seconds before stale. No request made within this window.'],
-      ['immutable', 'Never revalidate. Use ONLY with content-hashed filenames.'],
-      ['ETag', 'Server fingerprint. Browser sends as If-None-Match → 304 saves body transmission.'],
-      ['stale-while-revalidate', 'Serve stale instantly + revalidate async. Zero latency with freshness.'],
-      ['Vary', 'Cache key includes named headers. Vary: Accept-Encoding = separate copy per encoding.'],
-      ['s-maxage', 'CDN-only TTL — overrides max-age for shared caches only, not browsers'],
+      ['Cache-Control: max-age', 'Tells the browser how many seconds to trust the cached copy. max-age=0 means always check.'],
+      ['ETag (fingerprint)', 'Server sends a fingerprint of the content. Browser sends it back next time: "Is this still current?" 304 Not Modified saves bandwidth.'],
+      ['Immutable flag', 'Cache-Control: immutable tells the browser: "This URL\'s content never changes. Don\'t even check." For hashed assets.'],
+      ['Service Worker cache', 'JavaScript-controlled cache. Can serve content offline. Lives in a separate storage from the HTTP cache.'],
+      ['Vary header', 'Tells caches that responses vary by header (e.g. Accept-Language). Multiple cached versions for the same URL.'],
+      ['Stale-while-revalidate', 'Serve the cached copy immediately, then fetch a fresh copy in the background for next time. Fast + eventually fresh.'],
     ],
-    insight: `The most common caching mistake: setting a long max-age on the HTML file itself. The HTML is the delivery mechanism for content-hashed asset URLs. Give HTML no-cache (revalidates, serves from cache on 304) and give all other assets max-age=31536000, immutable.`,
+    insight: `The Cache-Control: immutable flag is massively underused. If you're serving assets with content-hashed filenames (app.a1b2c3.js), they can never have the same content at the same URL. Adding immutable tells every browser and CDN to never even check for updates — shaving off a conditional request per asset per load.`,
     diagramKey: 'cache',
     sceneKey: 'cache',
-    seoDescription: 'How HTTP caching works: Cache-Control headers, ETag/304 revalidation, stale-while-revalidate, content-hashed assets with immutable, and the optimal caching strategy.',
+    seoDescription: 'How HTTP caching works: Cache-Control max-age, ETags, immutable flag, cache busting, and stale-while-revalidate.',
+    codeDemo: {
+      label: 'Caching Strategy',
+      bad: `// Every deploy: browser has to re-download everything
+// because the filename never changes
+<script src="/app.js"></script>
+<link rel="stylesheet" href="/styles.css" />
+
+// Response header:
+Cache-Control: no-cache`,
+      good: `// Hashed filenames: only re-download when content changes
+// Browser caches forever — the URL itself is the version
+<script src="/app.a1b2c3d4.js"></script>
+<link rel="stylesheet" href="/styles.9f8e7d6c.css" />
+
+// Response header:
+Cache-Control: max-age=31536000, immutable`,
+    },
   },
   {
     id: 'cdn-edge',
     phase: 'Optimize',
     order: 15,
     title: 'CDN & Edge',
-    subtitle: 'Anycast BGP routing delivers content from the nearest point of presence',
-    example: `Without CDN: London user → US-East origin = 150ms RTT
-With CDN:    London user → Frankfurt PoP = 8ms RTT
+    subtitle: 'Putting your content closer to the people who need it',
+    example: `Without a CDN, all requests go to one server:
+User in Tokyo → 200ms → server in Virginia → 200ms back = 400ms round trip
 
-On cache miss: Frankfurt PoP → origin shield → US-East origin
-Cache hit rate 95%+ means origin handles only 5% of traffic
+With a CDN, content is cached at hundreds of locations:
+User in Tokyo → 5ms → CDN edge in Tokyo → 5ms back = 10ms round trip
 
-Fastly Surrogate-Key purge:
-Surrogate-Key: product-123
-  — tags all product pages for instant global purge`,
+How it works:
+1. Your server ("origin") serves the first request from Tokyo.
+2. The CDN edge in Tokyo caches the response.
+3. All future Tokyo users get the cached copy — your server never sees them.
+
+For static files (images, JS, CSS) this is an enormous win.
+For dynamic content, modern CDNs run JavaScript at the edge too.`,
     facts: [
-      ['Anycast', 'Same IP, multiple BGP announcements. Routing directs user to nearest PoP automatically.'],
-      ['Origin shield', 'Single upstream PoP coalesces all PoP cache misses → 1 origin request instead of 200.'],
-      ['Surrogate-Key', 'Tag-based instant global purge (Fastly/Akamai). Essential for deploy invalidation.'],
-      ['CloudFront', 'Takes 30 seconds to 5 minutes to propagate invalidation. Plan deploys accordingly.'],
-      ['Edge compute', 'Cloudflare Workers, Fastly Compute: JS/Wasm at the PoP. Personalise without origin RTT.'],
-      ['Cache hit ratio', 'Aim for >95%. miss_rate × origin_latency = effective added latency per request.'],
+      ['Points of Presence (PoPs)', 'CDN edge locations worldwide. Major CDNs have 200–300+ PoPs. More PoPs = fewer users far from an edge.'],
+      ['Cache hit ratio', 'What % of requests are served from cache vs your origin. 90%+ is good. Low ratio = origin paying the full cost.'],
+      ['Edge Functions', 'Run JavaScript at CDN edge locations. Same latency win as static files, but for dynamic server logic.'],
+      ['Anycast routing', 'CDNs use anycast DNS so "cdn.example.com" resolves to the nearest edge server automatically.'],
+      ['Origin shield', 'Extra caching layer between the CDN edges and your origin server. Reduces origin load during cache misses.'],
+      ['Purging', 'Clearing cached content from all CDN edges. Some CDNs propagate globally in seconds, others take minutes.'],
     ],
-    insight: `Stale CDN cache after a bad deploy is one of the most common production incidents. Your deployment pipeline MUST include a tested, rehearsed cache purge step. Never deploy a breaking API change and a client asset change simultaneously without accounting for CDN propagation time.`,
+    insight: `CDN cache hit ratio is the metric that matters most. A CDN at 60% hit ratio still sends 40% of traffic to your origin — defeating much of the purpose. High hit ratios require long max-age on content and careful cache key design. Personalized responses (with cookies) often bypass CDN caches entirely unless you strip the cookie header.`,
     diagramKey: 'cdn',
     sceneKey: 'cdn',
-    seoDescription: 'How CDNs work: anycast BGP routing, points of presence (PoPs), origin shield, Surrogate-Key cache purging, edge compute, and cache hit ratio optimisation.',
+    seoDescription: 'How CDNs and edge networks work: points of presence, cache hit ratios, edge functions, and origin shields.',
   },
   {
     id: 'service-workers',
     phase: 'Optimize',
     order: 16,
     title: 'Service Workers',
-    subtitle: 'A programmable browser-native proxy for offline-first applications',
-    example: `Cache-first strategy (static assets):
-self.addEventListener('fetch', e => {
-  e.respondWith(
-    caches.match(e.request) || fetch(e.request)
-  )
-})
+    subtitle: 'A programmable middleman that lives between your app and the network',
+    example: `A Service Worker is JavaScript that runs in the background, separate from your page:
 
-Network-first (API calls):
-e.respondWith(
-  fetch(e.request).catch(() => caches.match(e.request))
-)
+1. Registration: your page installs it once
+   navigator.serviceWorker.register('/sw.js')
 
-Stale-while-revalidate:
-const cached = await caches.match(e.request)
-e.respondWith(cached || fetch(e.request))`,
+2. Activation: it controls all future page loads
+   self.addEventListener('install', e => e.waitUntil(cache.open('v1').then(c => c.addAll(['/','app.js']))))
+
+3. Every network request goes through it:
+   self.addEventListener('fetch', e => {
+     e.respondWith(
+       caches.match(e.request) || fetch(e.request)
+     )
+   })
+
+Load the page with no internet: it serves from cache.
+Update available: background sync downloads new version, activates on next visit.`,
     facts: [
-      ['Scope', 'SW intercepts all fetches within its registered URL path prefix only'],
-      ['Cache API', 'Separate from HTTP cache. Programmatic key→value: Request → Response. Version names.'],
-      ['Lifecycle', 'register → install (precache) → waiting → activate (cleanup) → controlling fetches'],
-      ['Background Sync', 'Queue failed requests offline and replay when connectivity restores'],
-      ['Push API', 'Receive push notifications from server even when page/browser is closed'],
-      ['skipWaiting', 'Force new SW to activate immediately. Risky — can break active tabs.'],
+      ['Lifecycle', 'installing → waiting → activating → activated. A new SW waits until all tabs using the old one are closed.'],
+      ['Cache Storage API', 'Separate from the HTTP cache. Your JavaScript controls it directly — nothing expires automatically.'],
+      ['Background Sync', 'Queue writes while offline. The SW sends them when connectivity returns — even if the tab was closed.'],
+      ['Push notifications', 'Server can wake the SW and show a notification even when the site isn\'t open.'],
+      ['HTTPS only', 'Service workers require HTTPS (or localhost). They can intercept all requests — too powerful for HTTP.'],
+      ['Scope restriction', '/sw.js at the root controls everything. /blog/sw.js only controls /blog/* paths.'],
     ],
-    insight: `Service Worker cache invalidation is notoriously treacherous. A bug in a SW is served FROM the SW's own cache — if the bug prevents updates propagating, you can permanently brick all users on that origin. Always version cache keys (cache-v2, cache-v3). Use Workbox; never write SW cache logic by hand.`,
+    insight: `Service workers introduce a classic cache invalidation problem: a new SW waits in "waiting" state until the old version's tabs all close. If users never fully close their tabs (common), they could be stuck on the old version for days. The fix: call skipWaiting() in install and clients.claim() in activate — but only if you're confident the new version is backward-compatible with old cached content.`,
     diagramKey: 'sw',
     sceneKey: 'sw',
-    seoDescription: 'How Service Workers work: fetch interception, cache strategies (cache-first, network-first, stale-while-revalidate), lifecycle, Push API, and safe cache versioning.',
+    seoDescription: 'How service workers work: lifecycle, Cache Storage API, offline support, background sync, and push notifications.',
+    codeDemo: {
+      label: 'Offline Strategy',
+      bad: `// No service worker — no offline support
+// Every request hits the network. No internet = broken app.
+fetch('/api/data')
+  .then(r => r.json())
+  .then(data => render(data))`,
+      good: `// Cache-first with network fallback
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request).then(cached => {
+      return cached ?? fetch(event.request).then(response => {
+        const clone = response.clone()
+        caches.open('v1').then(cache => cache.put(event.request, clone))
+        return response
+      })
+    })
+  )
+})`,
+    },
   },
 ]
-
-export const PHASES: Phase[] = ['Network', 'Browser', 'Render', 'Execute', 'Optimize']
 
 export function getTopicBySlug(slug: string): Topic | undefined {
   return topics.find(t => t.id === slug)
 }
 
 export function getTopicsByPhase(phase: Phase): Topic[] {
-  return topics.filter(t => t.phase === phase)
+  return topics.filter(t => t.phase === phase).sort((a, b) => a.order - b.order)
 }
 
-export function getAdjacentTopics(id: string): { prev: Topic | null; next: Topic | null } {
-  const idx = topics.findIndex(t => t.id === id)
+export function getAdjacentTopics(slug: string): { prev: Topic | null; next: Topic | null } {
+  const idx = topics.findIndex(t => t.id === slug)
   return {
     prev: idx > 0 ? topics[idx - 1] : null,
     next: idx < topics.length - 1 ? topics[idx + 1] : null,

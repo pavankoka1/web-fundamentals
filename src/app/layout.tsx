@@ -8,15 +8,15 @@ const BASE_URL = 'https://web-internals.dev'
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: 'Web Internals — How the Web Actually Works',
-    template: '%s | Web Internals',
+    default: 'Trace — From URL to Pixel',
+    template: '%s | Trace',
   },
-  description: 'The definitive visual guide to how the web works — from URL parsing to GPU compositing. 16 concepts explained with interactive WebGL animations, real code, and engineer-level insights.',
+  description: 'Trace the full journey of a web request — from typing a URL to the final pixel on screen. 16 concepts explained with interactive WebGL animations, plain English, and real engineer insights.',
   keywords: ['how the web works', 'browser internals', 'DNS', 'TCP', 'TLS', 'HTTP', 'V8', 'event loop', 'rendering pipeline', 'web performance'],
-  authors: [{ name: 'Web Internals' }],
+  authors: [{ name: 'Trace' }],
   openGraph: {
     type: 'website',
-    siteName: 'Web Internals',
+    siteName: 'Trace',
     locale: 'en_US',
   },
   twitter: {

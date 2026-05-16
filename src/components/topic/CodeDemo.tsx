@@ -24,12 +24,12 @@ export default function CodeDemo({ bad, good, label, phase }: Props) {
         <h2 className="text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>
           {label}
         </h2>
-        <div className="flex rounded-md overflow-hidden" style={{ border: '1px solid var(--color-border)' }}>
+        <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid var(--color-border)' }}>
           {(['bad', 'good'] as const).map(v => (
             <button key={v} onClick={() => setView(v)}
-              className="px-4 py-1.5 text-xs font-medium transition-colors"
+              className="px-4 py-1.5 text-xs font-medium transition-all"
               style={{
-                background: view === v ? (v === 'bad' ? '#2A0A0A' : color.bg) : 'transparent',
+                background: view === v ? (v === 'bad' ? 'rgba(255,77,109,0.15)' : color.bg) : 'transparent',
                 color: view === v ? (v === 'bad' ? '#FF4D6D' : color.accent) : 'var(--color-text-muted)',
               }}>
               {v === 'bad' ? '✗ Slow' : '✓ Fast'}
@@ -37,13 +37,35 @@ export default function CodeDemo({ bad, good, label, phase }: Props) {
           ))}
         </div>
       </div>
-      <div className="relative rounded-xl overflow-hidden" style={{ border: '1px solid var(--color-border)' }}>
-        <div className="absolute top-0 left-0 right-0 h-0.5"
-          style={{ background: view === 'bad' ? '#FF4D6D' : color.accent }} />
-        <pre className="p-5 text-sm leading-relaxed overflow-x-auto"
-          style={{ background: 'var(--color-surface)', color: 'var(--color-text-primary)', margin: 0, fontFamily: 'var(--font-mono)' }}>
-          <code>{view === 'bad' ? bad : good}</code>
-        </pre>
+
+      <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${view === 'bad' ? 'rgba(255,77,109,0.2)' : color.dim}` }}>
+        {/* Top accent line */}
+        <div className="h-0.5" style={{ background: view === 'bad' ? '#FF4D6D' : color.accent }} />
+        {/* Header row */}
+        <div className="flex items-center gap-2 px-4 py-2.5"
+          style={{ background: view === 'bad' ? 'rgba(255,77,109,0.06)' : color.bg, borderBottom: '1px solid var(--color-border)' }}>
+          <div className="flex gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full" style={{ background: 'rgba(255,255,255,0.1)' }} />
+            <div className="w-2.5 h-2.5 rounded-full" style={{ background: 'rgba(255,255,255,0.1)' }} />
+            <div className="w-2.5 h-2.5 rounded-full" style={{ background: 'rgba(255,255,255,0.1)' }} />
+          </div>
+          <span className="text-xs ml-1" style={{ color: view === 'bad' ? 'rgba(255,77,109,0.7)' : color.accent, opacity: 0.7 }}>
+            {view === 'bad' ? 'approach.ts — avoid this' : 'approach.ts — prefer this'}
+          </span>
+        </div>
+        {/* Code */}
+        <div style={{ background: '#0A0A14', overflowX: 'auto', maxWidth: '100%' }}>
+          <pre className="p-5 text-sm leading-7 m-0 min-w-0"
+            style={{
+              color: 'var(--color-text-primary)',
+              fontFamily: 'var(--font-mono)',
+              tabSize: 2,
+              whiteSpace: 'pre',
+              overflowX: 'auto',
+            }}>
+            <code>{view === 'bad' ? bad : good}</code>
+          </pre>
+        </div>
       </div>
     </motion.section>
   )
