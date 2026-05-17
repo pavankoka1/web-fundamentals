@@ -18,6 +18,7 @@ const diagrams: Record<string, React.LazyExoticComponent<React.ComponentType>> =
   cache:     lazy(() => import('./CacheDiagram')),
   cdn:       lazy(() => import('./CdnDiagram')),
   sw:        lazy(() => import('./SwDiagram')),
+  frame:     lazy(() => import('./FrameDiagram')),
 }
 
 export default function DiagramLoader({ diagramKey }: { diagramKey: string }) {

@@ -7,7 +7,7 @@ import HeroSceneLoader from '@/components/home/HeroSceneLoader'
 
 export const metadata: Metadata = {
   title: 'Web Fundamentals — Under the Hood',
-  description: 'Web Fundamentals: how the web actually works, under the hood. 16 concepts from URL to the final pixel on screen — DNS, TCP, TLS, HTTP, rendering, and more. Interactive animations, plain English.',
+  description: 'Web Fundamentals: how the web actually works, under the hood. 17 concepts from URL to the final pixel on screen — DNS, TCP, TLS, HTTP, rendering, frame budgets, and more. Interactive animations, plain English.',
 }
 
 export default function HomePage() {
@@ -32,7 +32,7 @@ export default function HomePage() {
           <div className="flex flex-col items-center text-center px-6 pb-16 pt-2">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium mb-7"
               style={{ background: 'rgba(0,212,255,0.06)', border: '1px solid rgba(0,212,255,0.15)', color: '#00D4FF', fontFamily: 'var(--font-geist-mono)', letterSpacing: '0.06em' }}>
-              16 concepts · 5 phases · interactive animations
+              17 concepts · 5 phases · interactive animations
             </div>
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-5 max-w-3xl"
               style={{ color: 'var(--color-text-primary)', letterSpacing: '-0.04em', lineHeight: '1.05' }}>
@@ -47,7 +47,7 @@ export default function HomePage() {
             </h1>
             <p className="text-lg md:text-xl mb-10 leading-relaxed max-w-2xl" style={{ color: 'var(--color-text-secondary)' }}>
               What actually happens when you type a URL and press Enter?
-              16 concepts, traced from network handshake to the final pixel
+              17 concepts, traced from network handshake to the final pixel
               painted on your screen — in plain English.
             </p>
             <div className="flex flex-wrap gap-3 justify-center">
@@ -59,7 +59,7 @@ export default function HomePage() {
               <Link href="#concepts"
                 className="px-6 py-3 rounded-xl font-semibold text-sm transition-all"
                 style={{ background: 'var(--color-surface)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)' }}>
-                Browse All 16
+                Browse All 17
               </Link>
             </div>
           </div>

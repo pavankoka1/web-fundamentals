@@ -19,6 +19,7 @@ const scenes: Record<string, React.LazyExoticComponent<React.ComponentType>> = {
   cache:       lazy(() => import('./CacheScene')),
   cdn:         lazy(() => import('./CdnScene')),
   sw:          lazy(() => import('./SwScene')),
+  frameBudget: lazy(() => import('./FrameBudgetScene')),
 }
 
 export default function SceneLoader({ sceneKey }: { sceneKey: string }) {
