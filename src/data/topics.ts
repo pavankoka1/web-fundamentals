@@ -13,6 +13,12 @@ export interface Topic {
   sceneKey: string
   seoDescription: string
   codeDemo?: { bad: string; good: string; label: string }
+  step?: number
+  globalOrder?: number
+  arrow?: string
+  hook?: string
+  newConcept?: boolean
+  source?: "original" | "hbr" | "wf"
 }
 
 export const PHASES = ['Network', 'Browser', 'Render', 'Execute', 'Optimize'] as const
@@ -632,4 +638,63 @@ export function getAdjacentTopics(slug: string): { prev: Topic | null; next: Top
     prev: idx > 0 ? topics[idx - 1] : null,
     next: idx < topics.length - 1 ? topics[idx + 1] : null,
   }
+}
+
+// Step assignment — maps each topic.id to its new step + position
+export const TOPIC_STEP_MAP: Record<string, { step: number; order: number; globalOrder: number }> = {
+  // Step 1 — Network & transport (existing 8 + 2 new in Phase E)
+  "url-parsing":        { step: 1, order: 1, globalOrder: 1 },
+  "service-workers":    { step: 1, order: 2, globalOrder: 2 },
+  "dns-resolution":     { step: 1, order: 3, globalOrder: 3 },
+  "tcp-connection":     { step: 1, order: 4, globalOrder: 4 },
+  "tls-handshake":      { step: 1, order: 5, globalOrder: 5 },
+  "http-request":       { step: 1, order: 6, globalOrder: 6 },
+  "http-caching":       { step: 1, order: 7, globalOrder: 7 },
+  "cdn-edge":           { step: 1, order: 8, globalOrder: 8 },
+  // Step 2 — Parsing
+  "html-parsing":       { step: 2, order: 1, globalOrder: 11 },
+  "css-parsing":        { step: 2, order: 2, globalOrder: 12 },
+  // v8-engine and event-loop fold into scripts-during-parsing (Phase E)
+  "v8-engine":          { step: 2, order: 3, globalOrder: 13 },
+  "event-loop":         { step: 2, order: 3, globalOrder: 13 },
+  // Step 3
+  "render-tree":        { step: 3, order: 2, globalOrder: 15 },
+  // Step 4
+  "layout":             { step: 4, order: 1, globalOrder: 17 },
+  // Step 5
+  "paint":              { step: 5, order: 4, globalOrder: 22 },
+  // Step 6
+  "compositing":        { step: 6, order: 4, globalOrder: 26 },
+  // Step 7
+  "frame-budget":       { step: 7, order: 2, globalOrder: 28 },
+};
+
+export const TOPIC_SOURCES: Record<string, "original" | "hbr" | "wf"> = {
+  "url-parsing": "original",
+  "service-workers": "original",
+  "dns-resolution": "original",
+  "tcp-connection": "original",
+  "tls-handshake": "original",
+  "http-request": "original",
+  "http-caching": "original",
+  "cdn-edge": "original",
+  "html-parsing": "original",
+  "css-parsing": "original",
+  "v8-engine": "original",
+  "event-loop": "original",
+  "render-tree": "original",
+  "layout": "original",
+  "paint": "original",
+  "compositing": "original",
+  "frame-budget": "original",
+};
+
+export function getTopicStep(id: string) {
+  return TOPIC_STEP_MAP[id];
+}
+
+export function getTopicsByStep(step: number): Topic[] {
+  return topics
+    .filter((t) => TOPIC_STEP_MAP[t.id]?.step === step)
+    .sort((a, b) => (TOPIC_STEP_MAP[a.id]?.order ?? 0) - (TOPIC_STEP_MAP[b.id]?.order ?? 0));
 }
