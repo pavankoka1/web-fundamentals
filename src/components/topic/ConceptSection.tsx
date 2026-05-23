@@ -1,5 +1,6 @@
 'use client'
 import { motion } from 'framer-motion'
+import { stagger, fadeUp } from '@/lib/motion'
 
 function parseLine(line: string): { type: 'step' | 'bullet' | 'code' | 'spacer' | 'heading' | 'prose'; content: string; num?: string } {
   if (line === '') return { type: 'spacer', content: '' }
@@ -17,51 +18,86 @@ export default function ConceptSection({ example }: { example: string }) {
 
   return (
     <motion.section
-      initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.1 }}
-      className="px-8 py-6">
-      <h2 className="text-xs font-semibold tracking-widest uppercase mb-5"
-        style={{ color: 'var(--color-text-muted)' }}>The Concept</h2>
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: '-80px' }}
+      variants={stagger(0.04)}
+      className="mt-16"
+    >
+      <motion.h2
+        variants={fadeUp}
+        className="mb-6 font-mono text-[10px] uppercase tracking-[0.22em] text-[color:var(--color-text-muted)]"
+      >
+        The Concept
+      </motion.h2>
 
       <div className="space-y-1.5">
         {parsed.map((item, i) => {
           if (item.type === 'spacer') return <div key={i} className="h-2" />
 
           if (item.type === 'step') return (
-            <div key={i} className="flex items-start gap-3 py-1">
-              <span className="flex-shrink-0 w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center mt-0.5"
-                style={{ background: 'rgba(0,212,255,0.12)', color: '#00D4FF', border: '1px solid rgba(0,212,255,0.2)' }}>
+            <motion.div
+              key={i}
+              variants={fadeUp}
+              className="flex items-start gap-3 py-1"
+            >
+              <span
+                className="flex-shrink-0 w-6 h-6 rounded-full text-[11px] font-mono font-medium flex items-center justify-center mt-0.5 text-[color:var(--color-text-primary)] border border-[color:var(--color-accent)]"
+              >
                 {item.num}
               </span>
-              <span className="text-sm leading-relaxed" style={{ color: 'var(--color-text-primary)' }}>{item.content}</span>
-            </div>
+              <span
+                className="font-[family-name:var(--font-display)] text-[16px] leading-[1.65] text-[color:var(--color-text-primary)] max-w-[58ch]"
+              >
+                {item.content}
+              </span>
+            </motion.div>
           )
 
           if (item.type === 'bullet') return (
-            <div key={i} className="flex items-start gap-2.5 py-0.5 pl-1">
-              <span className="flex-shrink-0 w-1 h-1 rounded-full mt-2" style={{ background: 'var(--color-text-muted)' }} />
-              <span className="text-sm leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>{item.content}</span>
-            </div>
+            <motion.div
+              key={i}
+              variants={fadeUp}
+              className="flex items-start gap-2.5 py-0.5 pl-1"
+            >
+              <span
+                className="flex-shrink-0 w-1 h-1 rounded-full mt-[10px] bg-[color:var(--color-text-muted)]"
+              />
+              <span className="text-[14px] leading-[1.65] text-[color:var(--color-text-secondary)] max-w-[58ch]">
+                {item.content}
+              </span>
+            </motion.div>
           )
 
           if (item.type === 'heading') return (
-            <p key={i} className="text-sm font-medium pt-2 pb-1" style={{ color: 'var(--color-text-primary)' }}>
+            <motion.p
+              key={i}
+              variants={fadeUp}
+              className="font-[family-name:var(--font-display)] text-[15px] pt-3 pb-1 text-[color:var(--color-text-primary)]"
+            >
               {item.content}
-            </p>
+            </motion.p>
           )
 
           if (item.type === 'code') return (
-            <div key={i}
-              className="font-mono text-xs leading-relaxed px-3 py-1.5 rounded-md overflow-x-auto"
-              style={{ background: 'rgba(0,212,255,0.04)', color: '#A5F3FC', border: '1px solid rgba(0,212,255,0.08)', whiteSpace: 'pre' }}>
+            <motion.div
+              key={i}
+              variants={fadeUp}
+              className="font-mono text-[12px] leading-relaxed px-3 py-1.5 overflow-x-auto border border-[color:var(--color-border)] bg-[color:var(--color-surface)] text-[color:var(--color-accent)]"
+              style={{ whiteSpace: 'pre' }}
+            >
               {item.content}
-            </div>
+            </motion.div>
           )
 
           return (
-            <p key={i} className="text-sm leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
+            <motion.p
+              key={i}
+              variants={fadeUp}
+              className="text-[14px] leading-[1.65] text-[color:var(--color-text-secondary)] max-w-[58ch]"
+            >
               {item.content}
-            </p>
+            </motion.p>
           )
         })}
       </div>
