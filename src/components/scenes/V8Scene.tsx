@@ -5,10 +5,10 @@ import { Text } from '@react-three/drei'
 import * as THREE from 'three'
 
 const PIPELINE = [
-  { label: 'Source', sublabel: 'JS text', x: -4.5, color: '#FF6B6B' },
-  { label: 'AST', sublabel: 'parse', x: -1.5, color: '#FF6B6B' },
-  { label: 'Ignition', sublabel: 'bytecode', x: 1.5, color: '#FF6B6B' },
-  { label: 'TurboFan', sublabel: 'machine code', x: 4.5, color: '#FF6B6B' },
+  { label: 'Source', sublabel: 'JS text', x: -4.5, color: '#7DD3FC' },
+  { label: 'AST', sublabel: 'parse', x: -1.5, color: '#7DD3FC' },
+  { label: 'Ignition', sublabel: 'bytecode', x: 1.5, color: '#7DD3FC' },
+  { label: 'TurboFan', sublabel: 'machine code', x: 4.5, color: '#7DD3FC' },
 ]
 
 function PipelineNode({ label, sublabel, x, color, index }: { label: string; sublabel: string; x: number; color: string; index: number }) {
@@ -56,7 +56,7 @@ function Packet() {
   return (
     <mesh ref={ref} position={[-5, 0.6, 0]}>
       <sphereGeometry args={[0.1, 12, 12]} />
-      <meshStandardMaterial color="#FF6B6B" emissive="#FF6B6B" emissiveIntensity={5} />
+      <meshStandardMaterial color="#7DD3FC" emissive="#7DD3FC" emissiveIntensity={5} />
     </mesh>
   )
 }
@@ -105,12 +105,12 @@ export default function V8Scene() {
   return (
     <Canvas camera={{ position: [0, 0, 9], fov: 50 }} gl={{ antialias: true, alpha: true }} style={{ width: '100%', height: '100%' }}>
       <ambientLight intensity={0.3} />
-      <pointLight position={[0, 4, 4]} intensity={2} color="#FF6B6B" />
+      <pointLight position={[0, 4, 4]} intensity={2} color="#7DD3FC" />
       {PIPELINE.map((p, i) => <PipelineNode key={p.label} {...p} index={i} />)}
       <Connectors />
       <Packet />
       <DeoptPath />
-      <Text position={[0, 2.0, 0]} fontSize={0.22} color="#FF6B6B" anchorX="center" anchorY="middle">V8 Compilation Pipeline</Text>
+      <Text position={[0, 2.0, 0]} fontSize={0.22} color="#7DD3FC" anchorX="center" anchorY="middle">V8 Compilation Pipeline</Text>
     </Canvas>
   )
 }
