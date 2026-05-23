@@ -1,8 +1,11 @@
 'use client'
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, type ComponentType, type LazyExoticComponent } from 'react'
 import SceneBoundary from '@/components/SceneBoundary'
 
-const scenes: Record<string, React.LazyExoticComponent<React.ComponentType>> = {
+const PlaceholderScene = lazy(() => import('./PlaceholderScene'))
+
+// Scenes with their own custom visualization.
+const customScenes: Record<string, LazyExoticComponent<ComponentType>> = {
   url:         lazy(() => import('./UrlScene')),
   dns:         lazy(() => import('./DnsScene')),
   tcp:         lazy(() => import('./TcpScene')),
@@ -22,13 +25,51 @@ const scenes: Record<string, React.LazyExoticComponent<React.ComponentType>> = {
   frameBudget: lazy(() => import('./FrameBudgetScene')),
 }
 
-export default function SceneLoader({ sceneKey }: { sceneKey: string }) {
-  const Scene = scenes[sceneKey]
-  if (!Scene) return null
+// Phase E new concepts — all currently route to PlaceholderScene.
+const placeholderSceneKeys = new Set<string>([
+  'resource-hints-placeholder',
+  'resource-loading-priorities-placeholder',
+  'scripts-during-parsing-placeholder',
+  'style-recalculation-placeholder',
+  'layout-tree-construction-placeholder',
+  'containment-placeholder',
+  'display-lists-placeholder',
+  'stacking-contexts-placeholder',
+  'property-trees-placeholder',
+  'layer-promotion-placeholder',
+  'commit-and-compositor-thread-placeholder',
+  'tiling-rasterization-placeholder',
+  'vsync-display-placeholder',
+])
+
+interface SceneLoaderProps {
+  sceneKey: string
+  conceptTitle?: string
+}
+
+export default function SceneLoader({ sceneKey, conceptTitle }: SceneLoaderProps) {
+  const CustomScene = customScenes[sceneKey]
+
+  // Resolve to placeholder if explicitly registered, or if the key has the
+  // -placeholder suffix (defensive fall-through for future new concepts).
+  const isPlaceholder =
+    !CustomScene &&
+    (placeholderSceneKeys.has(sceneKey) || sceneKey.endsWith('-placeholder'))
+
+  if (!CustomScene && !isPlaceholder) return null
+
   return (
     <SceneBoundary>
-      <Suspense fallback={<div className="w-full h-full" style={{ background: 'var(--color-surface)' }} />}>
-        <Scene />
+      <Suspense
+        fallback={
+          <div className="w-full h-full" style={{ background: 'var(--color-surface)' }} />
+        }
+      >
+        {CustomScene ? (
+          <CustomScene />
+        ) : (
+          <PlaceholderScene conceptTitle={conceptTitle} />
+        )}
       </Suspense>
     </SceneBoundary>
   )

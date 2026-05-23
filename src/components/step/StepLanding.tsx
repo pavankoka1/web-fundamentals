@@ -54,7 +54,8 @@ export function StepLanding({ step, concepts }: Props) {
                 index={m?.order ?? 0}
                 globalOrder={m?.globalOrder ?? 0}
                 title={c.title}
-                hook={c.subtitle || ""}
+                hook={c.hook || c.subtitle || ""}
+                isNew={c.newConcept}
               />
             );
           })}

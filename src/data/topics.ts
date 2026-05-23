@@ -451,7 +451,7 @@ The loop runs like this, forever:
     seoDescription: 'How the JavaScript event loop works: call stack, microtask and macro task queues, VSync, frame budget, jank, and why long tasks block rendering.',
   },
   {
-    id: 'frame-jank',
+    id: 'frame-budget',
     phase: 'Execute',
     order: 14,
     title: 'Frame & Jank',

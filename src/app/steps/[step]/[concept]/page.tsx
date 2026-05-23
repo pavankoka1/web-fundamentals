@@ -69,7 +69,7 @@ export default async function Page({ params }: Props) {
         className="w-full h-72 md:h-96 relative overflow-hidden"
         style={{ background: 'var(--color-surface)' }}
       >
-        <SceneLoader sceneKey={topic.sceneKey} />
+        <SceneLoader sceneKey={topic.sceneKey} conceptTitle={topic.title} />
       </div>
 
       {/* Content */}
