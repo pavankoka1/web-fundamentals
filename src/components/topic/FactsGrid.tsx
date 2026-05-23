@@ -1,31 +1,37 @@
 'use client'
 import { motion } from 'framer-motion'
 import type { Topic } from '@/data/topics'
-import { phaseColor } from '@/lib/phaseColors'
+import { stagger, fadeUp } from '@/lib/motion'
 
 export default function FactsGrid({ topic }: { topic: Topic }) {
-  const color = phaseColor(topic.phase)
   return (
     <motion.section
-      initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.15 }}
-      className="px-8 py-6">
-      <h2 className="text-xs font-semibold tracking-widest uppercase mb-5"
-        style={{ color: 'var(--color-text-muted)' }}>Key Facts</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {topic.facts.map(([label, value], i) => (
-          <motion.div key={label}
-            initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }} transition={{ duration: 0.3, delay: i * 0.04 }}
-            className="rounded-xl p-4 group"
-            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-            <div className="flex items-start gap-2 mb-2">
-              <div className="w-1 h-1 rounded-full mt-2 flex-shrink-0" style={{ background: color.accent }} />
-              <div className="text-sm font-semibold leading-snug" style={{ color: color.accent }}>
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: '-80px' }}
+      variants={stagger(0.05)}
+      className="mt-20"
+    >
+      <motion.h2
+        variants={fadeUp}
+        className="mb-6 font-mono text-[10px] uppercase tracking-[0.22em] text-[color:var(--color-text-muted)]"
+      >
+        Key Facts
+      </motion.h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-[color:var(--color-border)] border border-[color:var(--color-border)]">
+        {topic.facts.map(([label, value]) => (
+          <motion.div
+            key={label}
+            variants={fadeUp}
+            className="px-5 py-4 bg-[color:var(--color-surface)]"
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-1 h-1 rounded-full bg-[color:var(--color-accent)]" />
+              <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[color:var(--color-text-muted)]">
                 {label}
               </div>
             </div>
-            <div className="text-sm leading-relaxed pl-3" style={{ color: 'var(--color-text-secondary)' }}>
+            <div className="text-[14px] leading-[1.6] text-[color:var(--color-text-primary)]">
               {value}
             </div>
           </motion.div>
