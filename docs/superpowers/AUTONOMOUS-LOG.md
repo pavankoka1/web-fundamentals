@@ -206,3 +206,44 @@ Visual smoke tests (Playwright at 1440x900):
 
 29 commits on `main`. Tag: `v2.0.0-design-d` on commit `a3e90cb`.
 
+
+## User feedback round — visual polish (2026-05-23 evening)
+
+User returned with 7 specific items. Dispatched 4 parallel implementer subagents.
+
+Commits (7):
+- fa13a0f — feat: top-left HomeMark + top-right MouseEye mounted globally
+- 4a35bdd — feat: PipelineOverview — refactor HeroScene to Direction D 7-step animation
+- 7865ba2 — feat: integrate PipelineOverview into home above step cards
+- 791469e — refactor: ConceptCard with padding + hover lift, applied across StepLanding + JourneyOverview
+- ab7ac90 — feat: StepRail hover scale + label slide + connecting line + click feedback
+- e48d234 — feat: StepHero — per-step Canvas 2D animation on step landing pages
+- 2f142b5 — feat: richen PlaceholderScene — drifting lines + better title + height bump
+- 0e12a13 — fix: drop letter-spacing on PipelineOverview labels — COMPOSITING+DISPLAY were overlapping
+
+Files created:
+- src/components/brand/HomeMark.tsx — top-left home link with ice-cyan house glyph
+- src/components/home/PipelineOverview.tsx — 7-step pipeline hero animation
+- src/components/step/StepHero.tsx — per-step Canvas 2D animations (7 distinct variants)
+
+Files modified:
+- src/app/layout.tsx — mounted HomeMark + MouseEye
+- src/components/MouseEye.tsx — repositioned to top-right, ice-cyan tint
+- src/components/atoms/ConceptCard.tsx — padding + hover glow + accent border
+- src/components/home/JourneyOverview.tsx — PipelineOverview integration + card hover treatment
+- src/components/step/StepLanding.tsx — StepHero integration + card gap
+- src/components/layout/StepRail.tsx — hover scale + label slide + connecting line
+- src/components/scenes/PlaceholderScene.tsx — drifting lines + glow text
+- src/lib/motion.ts — tuned railDotActive pulse
+
+User feedback addressed (7/7):
+1. ✓ Top-left HOME button (was missing — no way back to home)
+2. ✓ Home page animation back (PipelineOverview — 7-stage particle flow with active highlighting)
+3. ✓ Cards have padding (px-6 lg:px-8, rounded borders, hover glow)
+4. ✓ StepRail hover animation (spring scale + label slide-in + connecting line)
+5. ✓ Step landing pages now have StepHero (7 distinct per-step animations) + PlaceholderScene richer for new concepts
+6. ✓ MouseEye mounted top-right
+7. ✓ Overall UI significantly more polished
+
+Tagged: v2.1.0-feedback (in progress)
+
