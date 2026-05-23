@@ -92,7 +92,6 @@ export default async function Page({ params }: Props) {
             bad={topic.codeDemo.bad}
             good={topic.codeDemo.good}
             label={topic.codeDemo.label}
-            phase={topic.phase}
           />
         )}
         <TopicNav prev={prev} next={next} />
