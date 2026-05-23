@@ -3,6 +3,8 @@ import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import { Source_Serif_4 } from 'next/font/google'
 import { KokaMark } from '@/components/brand/KokaMark'
+import { HomeMark } from '@/components/brand/HomeMark'
+import { MouseEye } from '@/components/MouseEye'
 import { ProgressHairline } from '@/components/layout/ProgressHairline'
 import { StepRail } from '@/components/layout/StepRail'
 import { PageTransition } from '@/components/layout/PageTransition'
@@ -46,6 +48,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable} ${sourceSerif.variable}`}>
       <body>
         <KokaMark />
+        <HomeMark />
+        <MouseEye />
         <ProgressHairline />
         <StepRail />
         <PageTransition>{children}</PageTransition>

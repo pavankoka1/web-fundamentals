@@ -1,7 +1,11 @@
 'use client'
 import { useEffect, useRef } from 'react'
 
-export default function MouseEye() {
+/**
+ * Cursor-following eye. Renders fixed top-right (24px from edges), z-40, pointer-events-none.
+ * Iris and accents use the ice-cyan accent (#7DD3FC) to match the Deep Ocean palette.
+ */
+export function MouseEye() {
   const irisRef = useRef<HTMLCanvasElement>(null)
   const overlayRef = useRef<HTMLCanvasElement>(null)
   const mouse = useRef({ x: 0.5, y: 0.5 })
@@ -19,11 +23,11 @@ export default function MouseEye() {
     const drawIris = () => {
       ctx.clearRect(0, 0, W, H)
       const g = ctx.createRadialGradient(CX, CY, 0, CX, CY, R)
-      g.addColorStop(0, '#e0faff')
-      g.addColorStop(0.18, '#00D4FF')
-      g.addColorStop(0.45, '#0088cc')
-      g.addColorStop(0.75, '#00335a')
-      g.addColorStop(1, '#000c18')
+      g.addColorStop(0, '#e6f6ff')
+      g.addColorStop(0.18, '#7DD3FC')
+      g.addColorStop(0.45, '#3b8fb8')
+      g.addColorStop(0.75, '#0f3045')
+      g.addColorStop(1, '#040b14')
       ctx.beginPath(); ctx.arc(CX, CY, R, 0, Math.PI*2)
       ctx.fillStyle = g; ctx.fill()
       ctx.save(); ctx.translate(CX, CY); ctx.rotate(rot)
@@ -60,9 +64,9 @@ export default function MouseEye() {
       // Pupil
       ovx.beginPath(); ovx.arc(px,py,PR,0,Math.PI*2)
       ovx.fillStyle='#000'; ovx.fill()
-      // Pupil ring
+      // Pupil ring — ice cyan
       ovx.beginPath(); ovx.arc(px,py,PR+0.8,0,Math.PI*2)
-      ovx.strokeStyle='rgba(0,212,255,0.35)'; ovx.lineWidth=0.8; ovx.stroke()
+      ovx.strokeStyle='rgba(125,211,252,0.35)'; ovx.lineWidth=0.8; ovx.stroke()
       // Highlights
       ovx.beginPath(); ovx.arc(px-2,py-2,1.8,0,Math.PI*2)
       ovx.fillStyle='rgba(255,255,255,0.88)'; ovx.fill()
@@ -76,9 +80,9 @@ export default function MouseEye() {
       }
       ovx.restore()
 
-      // Sclera ring
+      // Sclera ring — ice cyan
       ovx.beginPath(); ovx.arc(CX,CY,R,0,Math.PI*2)
-      ovx.strokeStyle='rgba(0,212,255,0.25)'; ovx.lineWidth=0.5; ovx.stroke()
+      ovx.strokeStyle='rgba(125,211,252,0.25)'; ovx.lineWidth=0.5; ovx.stroke()
 
       rId = requestAnimationFrame(drawOverlay)
     }
@@ -93,9 +97,21 @@ export default function MouseEye() {
   }, [])
 
   return (
-    <div className="relative cursor-pointer" style={{width:32,height:32,borderRadius:'50%',overflow:'hidden',boxShadow:'0 0 0 1px rgba(0,212,255,0.2), 0 0 8px rgba(0,212,255,0.1)'}}>
+    <div
+      className="pointer-events-none fixed right-6 top-6 z-40"
+      style={{
+        width: 32,
+        height: 32,
+        borderRadius: '50%',
+        overflow: 'hidden',
+        boxShadow: '0 0 0 1px rgba(125,211,252,0.2), 0 0 8px rgba(125,211,252,0.1)',
+      }}
+      aria-hidden
+    >
       <canvas ref={irisRef} width={32} height={32} className="absolute inset-0" />
       <canvas ref={overlayRef} width={32} height={32} className="absolute inset-0" />
     </div>
   )
 }
+
+export default MouseEye
