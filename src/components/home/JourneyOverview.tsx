@@ -4,6 +4,7 @@ import Link from "next/link";
 import { STEPS } from "@/lib/steps";
 import { GradientRule } from "@/components/atoms/GradientRule";
 import { stagger, fadeUp, heroEntrance } from "@/lib/motion";
+import { PipelineOverview } from "./PipelineOverview";
 
 export function JourneyOverview() {
   return (
@@ -29,7 +30,27 @@ export function JourneyOverview() {
 
         <div className="mt-12"><GradientRule /></div>
 
-        <motion.div className="mt-8 flex flex-col gap-2" variants={stagger(0.06)}>
+        <motion.div variants={fadeUp} className="mt-12">
+          <div className="mb-4 font-mono text-[10px] uppercase tracking-[0.3em] text-[color:var(--color-text-muted)]">
+            The journey in one picture
+          </div>
+          <div className="relative overflow-hidden rounded-md border border-[color:var(--color-border)] bg-[color:var(--color-surface)]">
+            <PipelineOverview />
+          </div>
+        </motion.div>
+
+        <motion.div variants={fadeUp} className="mt-8">
+          <GradientRule />
+        </motion.div>
+
+        <motion.div
+          className="mt-8 font-mono text-[10px] uppercase tracking-[0.3em] text-[color:var(--color-text-muted)]"
+          variants={fadeUp}
+        >
+          Each step in detail
+        </motion.div>
+
+        <motion.div className="mt-6 flex flex-col gap-2" variants={stagger(0.06)}>
           {STEPS.map((s) => (
             <motion.div
               key={s.step}
