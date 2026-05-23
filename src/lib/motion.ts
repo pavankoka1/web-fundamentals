@@ -54,8 +54,8 @@ export const demoReveal: Variants = {
 export const railDotActive: Variants = {
   rest: { scale: 1, opacity: 0.85 },
   pulse: {
-    opacity: [0.85, 1, 0.85],
-    transition: { duration: 2, repeat: Infinity, ease: "linear" },
+    opacity: [0.7, 1, 0.7],
+    transition: { duration: 1.8, repeat: Infinity, ease: "linear" },
   },
 };
 
