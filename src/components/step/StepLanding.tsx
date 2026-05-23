@@ -4,6 +4,7 @@ import { StepMeta } from "@/lib/steps";
 import { StepBadge } from "@/components/atoms/StepBadge";
 import { GradientRule } from "@/components/atoms/GradientRule";
 import { ConceptCard } from "@/components/atoms/ConceptCard";
+import { StepHero } from "@/components/step/StepHero";
 import { stagger, fadeUp, heroEntrance } from "@/lib/motion";
 import { Topic, TOPIC_STEP_MAP } from "@/data/topics";
 
@@ -33,6 +34,10 @@ export function StepLanding({ step, concepts }: Props) {
         >
           {step.lede}
         </motion.p>
+
+        <motion.div variants={fadeUp}>
+          <StepHero step={step.step} />
+        </motion.div>
 
         <div className="mt-12">
           <GradientRule />
