@@ -6,8 +6,8 @@ import * as THREE from 'three'
 
 const RULES = [
   { selector: 'p', specificity: 0.1, color: '#4A4A6A', label: 'element', score: '001' },
-  { selector: '.card p', specificity: 0.55, color: '#4D9FFF', label: 'class+element', score: '011' },
-  { selector: '#hero .card p', specificity: 1.0, color: '#00D4FF', label: 'id+class+el', score: '111' },
+  { selector: '.card p', specificity: 0.55, color: '#A5F3FC', label: 'class+element', score: '011' },
+  { selector: '#hero .card p', specificity: 1.0, color: '#7DD3FC', label: 'id+class+el', score: '111' },
 ]
 
 function Rule({ selector, specificity, color, label, score, y }: { selector: string; specificity: number; color: string; label: string; score: string; y: number }) {
@@ -49,7 +49,7 @@ function Rule({ selector, specificity, color, label, score, y }: { selector: str
       <Text position={[maxW / 2 + 0.5, 0, 0]} fontSize={0.13} color={color} anchorX="center" anchorY="middle">{score}</Text>
       <Text position={[0, -0.28, 0]} fontSize={0.1} color="#4A4A6A" anchorX="center" anchorY="middle">{label}</Text>
       {isWinner && (
-        <Text position={[maxW / 2 + 1.2, 0.25, 0]} fontSize={0.13} color="#00E5A0" anchorX="center" anchorY="middle">WINS</Text>
+        <Text position={[maxW / 2 + 1.2, 0.25, 0]} fontSize={0.13} color="#A5F3FC" anchorX="center" anchorY="middle">WINS</Text>
       )}
     </group>
   )
@@ -59,8 +59,8 @@ export default function CssScene() {
   return (
     <Canvas camera={{ position: [0, 0, 8], fov: 50 }} gl={{ antialias: true, alpha: true }} style={{ width: '100%', height: '100%' }}>
       <ambientLight intensity={0.3} />
-      <pointLight position={[0, 4, 4]} intensity={2} color="#4D9FFF" />
-      <Text position={[0, 2.0, 0]} fontSize={0.22} color="#4D9FFF" anchorX="center" anchorY="middle">CSS Specificity Cascade</Text>
+      <pointLight position={[0, 4, 4]} intensity={2} color="#A5F3FC" />
+      <Text position={[0, 2.0, 0]} fontSize={0.22} color="#A5F3FC" anchorX="center" anchorY="middle">CSS Specificity Cascade</Text>
       {RULES.map((r, i) => <Rule key={r.selector} {...r} y={0.7 - i * 0.9} />)}
       <Text position={[-1.75, -1.6, 0]} fontSize={0.12} color="#4A4A6A" anchorX="center" anchorY="middle">selector</Text>
       <Text position={[2.25, -1.6, 0]} fontSize={0.12} color="#4A4A6A" anchorX="center" anchorY="middle">score</Text>

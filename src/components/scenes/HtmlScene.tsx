@@ -36,7 +36,7 @@ function CharStream() {
         <group key={i} ref={el => { groupRefs.current[i] = el }} position={[-5.5, 0, 0]}>
           <mesh>
             <planeGeometry args={[0.22, 0.28]} />
-            <meshStandardMaterial color="#4D9FFF" emissive="#4D9FFF" emissiveIntensity={0.5} transparent />
+            <meshStandardMaterial color="#A5F3FC" emissive="#A5F3FC" emissiveIntensity={0.5} transparent />
           </mesh>
           <Text position={[0, 0, 0.02]} fontSize={0.16} color="#000000" anchorX="center" anchorY="middle">
             {ch}
@@ -60,12 +60,12 @@ function Tokenizer() {
     <group position={[-1.5, 0, 0]}>
       <mesh ref={ref}>
         <boxGeometry args={[1.4, 1.0, 0.12]} />
-        <meshStandardMaterial color="#0D0D1A" emissive="#FFB340" emissiveIntensity={0.2} />
+        <meshStandardMaterial color="#0D0D1A" emissive="#67E8F9" emissiveIntensity={0.2} />
       </mesh>
       <lineSegments geometry={edgeGeo}>
-        <lineBasicMaterial color="#FFB340" transparent opacity={0.5} />
+        <lineBasicMaterial color="#67E8F9" transparent opacity={0.5} />
       </lineSegments>
-      <Text position={[0, 0.15, 0.07]} fontSize={0.15} color="#FFB340" anchorX="center" anchorY="middle">Tokenizer</Text>
+      <Text position={[0, 0.15, 0.07]} fontSize={0.15} color="#67E8F9" anchorX="center" anchorY="middle">Tokenizer</Text>
       <Text position={[0, -0.12, 0.07]} fontSize={0.11} color="#4A4A6A" anchorX="center" anchorY="middle">parse tokens</Text>
     </group>
   )
@@ -86,12 +86,12 @@ function TreeNode({ label, x, y, index }: { label: string; x: number; y: number;
     <group position={[x + 2, y, 0]}>
       <mesh ref={ref}>
         <boxGeometry args={[0.8, 0.4, 0.1]} />
-        <meshStandardMaterial color="#0D0D1A" emissive="#4D9FFF" emissiveIntensity={0.2} />
+        <meshStandardMaterial color="#0D0D1A" emissive="#A5F3FC" emissiveIntensity={0.2} />
       </mesh>
       <lineSegments geometry={edgeGeo}>
-        <lineBasicMaterial color="#4D9FFF" transparent opacity={0.4} />
+        <lineBasicMaterial color="#A5F3FC" transparent opacity={0.4} />
       </lineSegments>
-      <Text position={[0, 0, 0.06]} fontSize={0.14} color="#4D9FFF" anchorX="center" anchorY="middle">{label}</Text>
+      <Text position={[0, 0, 0.06]} fontSize={0.14} color="#A5F3FC" anchorX="center" anchorY="middle">{label}</Text>
     </group>
   )
 }
@@ -110,7 +110,7 @@ function TreeConnectors() {
   }, [])
   return (
     <lineSegments geometry={geo}>
-      <lineBasicMaterial color="#4D9FFF" transparent opacity={0.2} />
+      <lineBasicMaterial color="#A5F3FC" transparent opacity={0.2} />
     </lineSegments>
   )
 }
@@ -119,13 +119,13 @@ export default function HtmlScene() {
   return (
     <Canvas camera={{ position: [0, 0, 9], fov: 50 }} gl={{ antialias: true, alpha: true }} style={{ width: '100%', height: '100%' }}>
       <ambientLight intensity={0.3} />
-      <pointLight position={[0, 4, 4]} intensity={2} color="#4D9FFF" />
+      <pointLight position={[0, 4, 4]} intensity={2} color="#A5F3FC" />
       <CharStream />
       <Tokenizer />
       <TreeConnectors />
       {TREE_NODES.map((n, i) => <TreeNode key={n.label} {...n} index={i} />)}
-      <Text position={[-1.5, -1.5, 0]} fontSize={0.13} color="#FFB340" anchorX="center" anchorY="middle">HTML Parser</Text>
-      <Text position={[3.5, 1.8, 0]} fontSize={0.13} color="#4D9FFF" anchorX="center" anchorY="middle">DOM Tree</Text>
+      <Text position={[-1.5, -1.5, 0]} fontSize={0.13} color="#67E8F9" anchorX="center" anchorY="middle">HTML Parser</Text>
+      <Text position={[3.5, 1.8, 0]} fontSize={0.13} color="#A5F3FC" anchorX="center" anchorY="middle">DOM Tree</Text>
     </Canvas>
   )
 }

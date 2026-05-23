@@ -24,13 +24,13 @@ function RenderNode() {
     <group position={[-4, 0, 0]}>
       <mesh ref={ref}>
         <boxGeometry args={[1.3, 1.8, 0.1]} />
-        <meshStandardMaterial color="#0D0D1A" emissive="#FFB340" emissiveIntensity={0.15} />
+        <meshStandardMaterial color="#0D0D1A" emissive="#67E8F9" emissiveIntensity={0.15} />
       </mesh>
       <lineSegments geometry={edgeGeo}>
-        <lineBasicMaterial color="#FFB340" transparent opacity={0.5} />
+        <lineBasicMaterial color="#67E8F9" transparent opacity={0.5} />
       </lineSegments>
-      <Text position={[0, 0.3, 0.06]} fontSize={0.14} color="#FFB340" anchorX="center" anchorY="middle">Render</Text>
-      <Text position={[0, 0.0, 0.06]} fontSize={0.14} color="#FFB340" anchorX="center" anchorY="middle">Tree</Text>
+      <Text position={[0, 0.3, 0.06]} fontSize={0.14} color="#67E8F9" anchorX="center" anchorY="middle">Render</Text>
+      <Text position={[0, 0.0, 0.06]} fontSize={0.14} color="#67E8F9" anchorX="center" anchorY="middle">Tree</Text>
       <Text position={[0, -0.3, 0.06]} fontSize={0.11} color="#4A4A6A" anchorX="center" anchorY="middle">Node</Text>
     </group>
   )
@@ -54,14 +54,14 @@ function DisplayList() {
   })
   return (
     <group position={[0, 0, 0]}>
-      <Text position={[0, 1.6, 0]} fontSize={0.15} color="#FFB340" anchorX="center" anchorY="middle">Display List</Text>
+      <Text position={[0, 1.6, 0]} fontSize={0.15} color="#67E8F9" anchorX="center" anchorY="middle">Display List</Text>
       {COMMANDS.map((cmd, i) => (
         <group key={i} ref={el => { commandRefs.current[i] = el }} position={[0, 0.8 - i * 0.5, 0]}>
           <mesh>
             <boxGeometry args={[1.8, 0.35, 0.08]} />
-            <meshStandardMaterial color="#0D0D1A" emissive="#FFB340" emissiveIntensity={0.2} transparent opacity={0.8} />
+            <meshStandardMaterial color="#0D0D1A" emissive="#67E8F9" emissiveIntensity={0.2} transparent opacity={0.8} />
           </mesh>
-          <Text position={[0, 0, 0.05]} fontSize={0.12} color="#FFB340" anchorX="center" anchorY="middle">{cmd}</Text>
+          <Text position={[0, 0, 0.05]} fontSize={0.12} color="#67E8F9" anchorX="center" anchorY="middle">{cmd}</Text>
         </group>
       ))}
     </group>
@@ -76,8 +76,8 @@ function GpuTile({ x, y, index }: { x: number; y: number; index: number }) {
     const phase = (t * 0.4 + index * 0.11) % 1
     const mat = ref.current.material as THREE.MeshStandardMaterial
     const rasterized = phase > 0.3
-    mat.color.set(rasterized ? '#FFB340' : '#0D0D1A')
-    mat.emissive.set(rasterized ? '#FFB340' : '#111')
+    mat.color.set(rasterized ? '#67E8F9' : '#0D0D1A')
+    mat.emissive.set(rasterized ? '#67E8F9' : '#111')
     mat.emissiveIntensity = rasterized ? 0.3 + Math.sin(t * 2 + index) * 0.1 : 0.05
     mat.opacity = rasterized ? 0.7 : 0.3
   })
@@ -102,8 +102,8 @@ function Arrows() {
   }, [])
   return (
     <>
-      <line geometry={geo1}><lineBasicMaterial color="#FFB340" transparent opacity={0.4} /></line>
-      <line geometry={geo2}><lineBasicMaterial color="#FFB340" transparent opacity={0.4} /></line>
+      <line geometry={geo1}><lineBasicMaterial color="#67E8F9" transparent opacity={0.4} /></line>
+      <line geometry={geo2}><lineBasicMaterial color="#67E8F9" transparent opacity={0.4} /></line>
     </>
   )
 }
@@ -112,12 +112,12 @@ export default function PaintScene() {
   return (
     <Canvas camera={{ position: [0, 0, 9], fov: 50 }} gl={{ antialias: true, alpha: true }} style={{ width: '100%', height: '100%' }}>
       <ambientLight intensity={0.3} />
-      <pointLight position={[0, 4, 4]} intensity={2} color="#FFB340" />
+      <pointLight position={[0, 4, 4]} intensity={2} color="#67E8F9" />
       <RenderNode />
       <DisplayList />
       <Arrows />
       {TILES.map((t, i) => <GpuTile key={i} {...t} index={i} />)}
-      <Text position={[4.2, 1.7, 0]} fontSize={0.14} color="#FFB340" anchorX="center" anchorY="middle">GPU Tiles</Text>
+      <Text position={[4.2, 1.7, 0]} fontSize={0.14} color="#67E8F9" anchorX="center" anchorY="middle">GPU Tiles</Text>
     </Canvas>
   )
 }

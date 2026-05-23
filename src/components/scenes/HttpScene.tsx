@@ -9,8 +9,8 @@ function lerp(a: number, b: number, t: number) { return a+(b-a)*Math.max(0,Math.
 function clamp(x: number, lo=0, hi=1) { return Math.max(lo,Math.min(hi,x)) }
 
 const MESSAGES = [
-  { label:'GET /users/torvalds', sub:'HTTP/1.1 request', color:'#00D4FF', dir:'right', t0:0.00, t1:0.36 },
-  { label:'200 OK',              sub:'HTML response',    color:'#4D9FFF', dir:'left',  t0:0.46, t1:0.82 },
+  { label:'GET /users/torvalds', sub:'HTTP/1.1 request', color:'#7DD3FC', dir:'right', t0:0.00, t1:0.36 },
+  { label:'200 OK',              sub:'HTML response',    color:'#A5F3FC', dir:'left',  t0:0.46, t1:0.82 },
 ]
 
 export default function HttpScene() {
@@ -48,7 +48,7 @@ export default function HttpScene() {
 
       // Radial glow
       const grad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W,H)*0.6)
-      grad.addColorStop(0, 'rgba(0,212,255,0.04)')
+      grad.addColorStop(0, 'rgba(125,211,252,0.04)')
       grad.addColorStop(1, 'rgba(0,0,0,0)')
       ctx.fillStyle = grad
       ctx.fillRect(0, 0, W, H)
@@ -106,8 +106,8 @@ export default function HttpScene() {
         ctx.restore()
       }
 
-      drawBox(LX, 'BROWSER', 'your device', '#00D4FF', leftSending,  false)
-      drawBox(RX, 'SERVER',  'github.com',  '#4D9FFF', rightSending, processing)
+      drawBox(LX, 'BROWSER', 'your device', '#7DD3FC', leftSending,  false)
+      drawBox(RX, 'SERVER',  'github.com',  '#A5F3FC', rightSending, processing)
 
       // Lifelines
       const lifeTop = BOX_TOP + BOX_H + 4
@@ -217,7 +217,7 @@ export default function HttpScene() {
         const pulse = 0.5 + 0.5 * Math.sin(phase * Math.PI * 6)
         ctx.save()
         ctx.globalAlpha = 0.3 + pulse * 0.4
-        ctx.fillStyle = '#4D9FFF'
+        ctx.fillStyle = '#A5F3FC'
         ctx.font = '10px monospace'
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
@@ -231,9 +231,9 @@ export default function HttpScene() {
         const alpha = Math.sin(phase * Math.PI)
         ctx.save()
         ctx.globalAlpha = alpha
-        ctx.shadowColor = '#00E5A0'
+        ctx.shadowColor = '#A5F3FC'
         ctx.shadowBlur = 12
-        ctx.fillStyle = '#00E5A0'
+        ctx.fillStyle = '#A5F3FC'
         ctx.font = '700 14px monospace'
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'

@@ -9,9 +9,9 @@ function lerp(a: number, b: number, t: number) { return a+(b-a)*Math.max(0,Math.
 function clamp(x: number, lo=0, hi=1) { return Math.max(lo,Math.min(hi,x)) }
 
 const MESSAGES = [
-  { label:'ClientHello',        sub:'supported cipher suites', color:'#FFB340', dir:'right', t0:0.00, t1:0.20 },
-  { label:'ServerHello + Cert', sub:'public key + identity',   color:'#4D9FFF', dir:'left',  t0:0.24, t1:0.46 },
-  { label:'Finished',           sub:'session keys exchanged',  color:'#00E5A0', dir:'right', t0:0.50, t1:0.70 },
+  { label:'ClientHello',        sub:'supported cipher suites', color:'#67E8F9', dir:'right', t0:0.00, t1:0.20 },
+  { label:'ServerHello + Cert', sub:'public key + identity',   color:'#A5F3FC', dir:'left',  t0:0.24, t1:0.46 },
+  { label:'Finished',           sub:'session keys exchanged',  color:'#A5F3FC', dir:'right', t0:0.50, t1:0.70 },
 ]
 
 export default function TlsScene() {
@@ -49,7 +49,7 @@ export default function TlsScene() {
 
       // Radial glow
       const grad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W,H)*0.6)
-      grad.addColorStop(0, 'rgba(255,179,64,0.04)')
+      grad.addColorStop(0, 'rgba(103,232,249,0.04)')
       grad.addColorStop(1, 'rgba(0,0,0,0)')
       ctx.fillStyle = grad
       ctx.fillRect(0, 0, W, H)
@@ -105,8 +105,8 @@ export default function TlsScene() {
         ctx.restore()
       }
 
-      drawBox(LX, 'CLIENT', 'your browser', '#FFB340', leftSending)
-      drawBox(RX, 'SERVER', 'github.com',   '#FFB340', rightSending)
+      drawBox(LX, 'CLIENT', 'your browser', '#67E8F9', leftSending)
+      drawBox(RX, 'SERVER', 'github.com',   '#67E8F9', rightSending)
 
       // Lifelines
       const lifeTop = BOX_TOP + BOX_H + 4
@@ -216,9 +216,9 @@ export default function TlsScene() {
         const alpha = Math.sin(phase * Math.PI)
         ctx.save()
         ctx.globalAlpha = alpha
-        ctx.shadowColor = '#00E5A0'
+        ctx.shadowColor = '#A5F3FC'
         ctx.shadowBlur = 12
-        ctx.fillStyle = '#00E5A0'
+        ctx.fillStyle = '#A5F3FC'
         ctx.font = '700 14px monospace'
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'

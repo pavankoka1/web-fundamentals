@@ -3,13 +3,13 @@ import { useEffect, useRef } from 'react'
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 const C = {
-  raf:    '#00D4FF',
-  style:  '#4D9FFF',
-  layout: '#A78BFA',
-  paint:  '#FFB340',
-  commit: '#00E5A0',
-  jankJs: '#FF4D6D',
-  budget: 'rgba(255,77,77,0.5)',
+  raf:    '#7DD3FC',
+  style:  '#A5F3FC',
+  layout: '#BAE6FD',
+  paint:  '#67E8F9',
+  commit: '#A5F3FC',
+  jankJs: '#FF6B6B',
+  budget: 'rgba(255,107,107,0.5)',
   slotBg: 'rgba(255,255,255,0.02)',
   slotBorder: 'rgba(255,255,255,0.05)',
   text:   'rgba(180,180,220,0.6)',
@@ -118,13 +118,13 @@ export default function FrameBudgetScene() {
         // ── Slot background ───────────────────────────────────────────────
         ctx.save()
         if (isDropped) {
-          ctx.fillStyle = 'rgba(255,77,77,0.06)'
+          ctx.fillStyle = 'rgba(255,107,107,0.06)'
         } else {
           ctx.fillStyle = C.slotBg
         }
         ctx.fillRect(slotX, SLOT_TOP, SLOT_W, SLOT_H)
 
-        ctx.strokeStyle = isDropped ? 'rgba(255,77,77,0.15)' : C.slotBorder
+        ctx.strokeStyle = isDropped ? 'rgba(255,107,107,0.15)' : C.slotBorder
         ctx.lineWidth = 1
         ctx.strokeRect(slotX + 0.5, SLOT_TOP + 0.5, SLOT_W - 1, SLOT_H - 1)
         ctx.restore()
@@ -132,7 +132,7 @@ export default function FrameBudgetScene() {
         if (isDropped) {
           // ── Dropped frame ─────────────────────────────────────────────
           ctx.save()
-          ctx.fillStyle = 'rgba(255,77,77,0.55)'
+          ctx.fillStyle = 'rgba(255,107,107,0.55)'
           ctx.font = '700 10px "Geist Mono", monospace'
           ctx.textAlign = 'center'
           ctx.textBaseline = 'middle'
@@ -220,7 +220,7 @@ export default function FrameBudgetScene() {
       ctx.setLineDash([])
 
       // Budget label on the right
-      ctx.fillStyle = 'rgba(255,100,100,0.7)'
+      ctx.fillStyle = 'rgba(255,107,107,0.7)'
       ctx.font      = '500 9.5px "Geist Mono", monospace'
       ctx.textAlign = 'right'
       ctx.textBaseline = 'bottom'

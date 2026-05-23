@@ -7,13 +7,13 @@ import * as THREE from 'three'
 const NODES = [
   { label: 'Request', x: -4.0, y: 0, id: 'req' },
   { label: 'Cache?', x: -1.8, y: 0, id: 'check', diamond: true },
-  { label: '304 Not\nModified', x: 0.5, y: 1.5, id: 'hit', color: '#00E5A0' },
+  { label: '304 Not\nModified', x: 0.5, y: 1.5, id: 'hit', color: '#A5F3FC' },
   { label: 'Expired?', x: 0.5, y: 0, id: 'exp', diamond: true },
-  { label: 'Revalidate', x: 2.8, y: 1.0, id: 'reval', color: '#00E5A0' },
-  { label: 'Full 200\nFetch', x: 2.8, y: -1.0, id: 'fetch', color: '#FF4D6D' },
+  { label: 'Revalidate', x: 2.8, y: 1.0, id: 'reval', color: '#A5F3FC' },
+  { label: 'Full 200\nFetch', x: 2.8, y: -1.0, id: 'fetch', color: '#FF6B6B' },
 ]
 
-function FlowNode({ label, x, y, diamond = false, color = '#00E5A0' }: { label: string; x: number; y: number; diamond?: boolean; color?: string }) {
+function FlowNode({ label, x, y, diamond = false, color = '#A5F3FC' }: { label: string; x: number; y: number; diamond?: boolean; color?: string }) {
   const ref = useRef<THREE.Mesh>(null)
   const edgeGeo = useMemo(() => {
     if (diamond) return new THREE.EdgesGeometry(new THREE.BoxGeometry(1.2, 1.2, 0.08))
@@ -44,7 +44,7 @@ function FlowNode({ label, x, y, diamond = false, color = '#00E5A0' }: { label: 
 
 function FlowPacket({ path }: { path: 'hit' | 'miss' }) {
   const ref = useRef<THREE.Mesh>(null)
-  const color = path === 'hit' ? '#00E5A0' : '#FF4D6D'
+  const color = path === 'hit' ? '#A5F3FC' : '#FF6B6B'
 
   const waypoints = useMemo(() => {
     if (path === 'hit') {
@@ -105,14 +105,14 @@ export default function CacheScene() {
   return (
     <Canvas camera={{ position: [0, 0, 9], fov: 50 }} gl={{ antialias: true, alpha: true }} style={{ width: '100%', height: '100%' }}>
       <ambientLight intensity={0.3} />
-      <pointLight position={[0, 4, 4]} intensity={2} color="#00E5A0" />
-      {NODES.map(n => <FlowNode key={n.id} {...n} color={n.color ?? '#00E5A0'} />)}
+      <pointLight position={[0, 4, 4]} intensity={2} color="#A5F3FC" />
+      {NODES.map(n => <FlowNode key={n.id} {...n} color={n.color ?? '#A5F3FC'} />)}
       <FlowEdges />
       <FlowPacket path="hit" />
       <FlowPacket path="miss" />
-      <Text position={[0, 2.5, 0]} fontSize={0.22} color="#00E5A0" anchorX="center" anchorY="middle">Cache Decision Flow</Text>
-      <Text position={[-1.0, 0.6, 0]} fontSize={0.11} color="#00E5A0" anchorX="center" anchorY="middle">yes</Text>
-      <Text position={[-0.6, -0.5, 0]} fontSize={0.11} color="#FF4D6D" anchorX="center" anchorY="middle">no</Text>
+      <Text position={[0, 2.5, 0]} fontSize={0.22} color="#A5F3FC" anchorX="center" anchorY="middle">Cache Decision Flow</Text>
+      <Text position={[-1.0, 0.6, 0]} fontSize={0.11} color="#A5F3FC" anchorX="center" anchorY="middle">yes</Text>
+      <Text position={[-0.6, -0.5, 0]} fontSize={0.11} color="#FF6B6B" anchorX="center" anchorY="middle">no</Text>
     </Canvas>
   )
 }

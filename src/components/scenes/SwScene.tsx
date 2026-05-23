@@ -28,12 +28,12 @@ function StateNode({ label, x, index }: { label: string; x: number; index: numbe
     <group position={[x, 0, 0]}>
       <mesh ref={ref}>
         <boxGeometry args={[1.5, 0.6, 0.1]} />
-        <meshStandardMaterial color="#0D0D1A" emissive="#00E5A0" emissiveIntensity={0.12} />
+        <meshStandardMaterial color="#0D0D1A" emissive="#A5F3FC" emissiveIntensity={0.12} />
       </mesh>
       <lineSegments geometry={edgeGeo}>
-        <lineBasicMaterial color="#00E5A0" transparent opacity={0.4} />
+        <lineBasicMaterial color="#A5F3FC" transparent opacity={0.4} />
       </lineSegments>
-      <Text position={[0, 0, 0.06]} fontSize={0.14} color="#00E5A0" anchorX="center" anchorY="middle">{label}</Text>
+      <Text position={[0, 0, 0.06]} fontSize={0.14} color="#A5F3FC" anchorX="center" anchorY="middle">{label}</Text>
     </group>
   )
 }
@@ -55,7 +55,7 @@ function Token() {
   return (
     <mesh ref={ref}>
       <sphereGeometry args={[0.12, 12, 12]} />
-      <meshStandardMaterial color="#00E5A0" emissive="#00E5A0" emissiveIntensity={6} />
+      <meshStandardMaterial color="#A5F3FC" emissive="#A5F3FC" emissiveIntensity={6} />
     </mesh>
   )
 }
@@ -88,12 +88,12 @@ function FetchIntercept() {
   })
   return (
     <>
-      <line geometry={lineGeo}><lineBasicMaterial color="#00E5A0" transparent opacity={0.4} /></line>
+      <line geometry={lineGeo}><lineBasicMaterial color="#A5F3FC" transparent opacity={0.4} /></line>
       <mesh ref={ref}>
         <sphereGeometry args={[0.09, 12, 12]} />
-        <meshStandardMaterial color="#00E5A0" emissive="#00E5A0" emissiveIntensity={5} />
+        <meshStandardMaterial color="#A5F3FC" emissive="#A5F3FC" emissiveIntensity={5} />
       </mesh>
-      <Text position={[3.5, -1.9, 0]} fontSize={0.12} color="#00E5A0" anchorX="center" anchorY="middle">intercept fetch</Text>
+      <Text position={[3.5, -1.9, 0]} fontSize={0.12} color="#A5F3FC" anchorX="center" anchorY="middle">intercept fetch</Text>
       <Text position={[3.5, -2.2, 0]} fontSize={0.11} color="#4A4A6A" anchorX="center" anchorY="middle">cache / network</Text>
     </>
   )
@@ -103,12 +103,12 @@ export default function SwScene() {
   return (
     <Canvas camera={{ position: [0, 0, 9], fov: 50 }} gl={{ antialias: true, alpha: true }} style={{ width: '100%', height: '100%' }}>
       <ambientLight intensity={0.3} />
-      <pointLight position={[0, 4, 4]} intensity={2} color="#00E5A0" />
+      <pointLight position={[0, 4, 4]} intensity={2} color="#A5F3FC" />
       {STATES.map((s, i) => <StateNode key={s.label} {...s} index={i} />)}
       <Connectors />
       <Token />
       <FetchIntercept />
-      <Text position={[0, 1.5, 0]} fontSize={0.22} color="#00E5A0" anchorX="center" anchorY="middle">Service Worker Lifecycle</Text>
+      <Text position={[0, 1.5, 0]} fontSize={0.22} color="#A5F3FC" anchorX="center" anchorY="middle">Service Worker Lifecycle</Text>
     </Canvas>
   )
 }

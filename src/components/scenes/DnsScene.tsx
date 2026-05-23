@@ -2,11 +2,11 @@
 import { useEffect, useRef } from 'react'
 
 const NODES = [
-  { label: 'Your Browser',    sub: 'checks memory first',    color: '#00D4FF' },
-  { label: 'Your ISP',        sub: 'shared DNS cache',       color: '#4D9FFF' },
-  { label: 'Root Directory',  sub: 'finds .com servers',     color: '#A78BFA' },
-  { label: '.com Registry',   sub: 'finds github.com DNS',   color: '#FFB340' },
-  { label: "GitHub's DNS",    sub: 'returns 140.82.x.x',    color: '#00E5A0' },
+  { label: 'Your Browser',    sub: 'checks memory first',    color: '#7DD3FC' },
+  { label: 'Your ISP',        sub: 'shared DNS cache',       color: '#A5F3FC' },
+  { label: 'Root Directory',  sub: 'finds .com servers',     color: '#BAE6FD' },
+  { label: '.com Registry',   sub: 'finds github.com DNS',   color: '#67E8F9' },
+  { label: "GitHub's DNS",    sub: 'returns 140.82.x.x',    color: '#A5F3FC' },
 ]
 
 const CYCLE = 5200
@@ -82,8 +82,8 @@ export default function DnsScene() {
       const cx = W / 2
       const cy = H * 0.35
       const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(W, H) * 0.5)
-      grad.addColorStop(0, 'rgba(0,212,255,0.04)')
-      grad.addColorStop(1, 'rgba(0,212,255,0)')
+      grad.addColorStop(0, 'rgba(125,211,252,0.04)')
+      grad.addColorStop(1, 'rgba(125,211,252,0)')
       ctx.fillStyle = grad
       ctx.fillRect(0, 0, W, H)
 
@@ -181,7 +181,7 @@ export default function DnsScene() {
         ? lerp(lineX0, lineX1, easedFrac)
         : lerp(lineX1, lineX0, easedFrac)
       const dotY = lineY
-      const dotColor = isQuery ? '#FF6B6B' : '#00E5A0'
+      const dotColor = isQuery ? '#FF6B6B' : '#A5F3FC'
       const dotR = 5
 
       // Trail
@@ -227,7 +227,7 @@ export default function DnsScene() {
       ctx.textAlign = 'left'
       ctx.fillText('● Query', W * 0.05, legendY)
 
-      ctx.fillStyle = '#00E5A0'
+      ctx.fillStyle = '#A5F3FC'
       ctx.textAlign = 'left'
       ctx.fillText('● Response', W * 0.35, legendY)
 

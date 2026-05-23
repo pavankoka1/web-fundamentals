@@ -9,9 +9,9 @@ function lerp(a: number, b: number, t: number) { return a+(b-a)*Math.max(0,Math.
 function clamp(x: number, lo=0, hi=1) { return Math.max(lo,Math.min(hi,x)) }
 
 const MESSAGES = [
-  { label:'SYN',     sub:'"I want to connect"',  color:'#00D4FF', dir:'right', t0:0.00, t1:0.20 },
-  { label:'SYN-ACK', sub:'"OK, I\'m ready"',      color:'#4D9FFF', dir:'left',  t0:0.24, t1:0.44 },
-  { label:'ACK',     sub:'"Great, let\'s go!"',   color:'#00E5A0', dir:'right', t0:0.48, t1:0.68 },
+  { label:'SYN',     sub:'"I want to connect"',  color:'#7DD3FC', dir:'right', t0:0.00, t1:0.20 },
+  { label:'SYN-ACK', sub:'"OK, I\'m ready"',      color:'#A5F3FC', dir:'left',  t0:0.24, t1:0.44 },
+  { label:'ACK',     sub:'"Great, let\'s go!"',   color:'#A5F3FC', dir:'right', t0:0.48, t1:0.68 },
 ]
 
 export default function TcpScene() {
@@ -49,7 +49,7 @@ export default function TcpScene() {
 
       // Radial glow
       const grad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W,H)*0.6)
-      grad.addColorStop(0, 'rgba(0,212,255,0.04)')
+      grad.addColorStop(0, 'rgba(125,211,252,0.04)')
       grad.addColorStop(1, 'rgba(0,0,0,0)')
       ctx.fillStyle = grad
       ctx.fillRect(0, 0, W, H)
@@ -109,8 +109,8 @@ export default function TcpScene() {
         ctx.restore()
       }
 
-      drawBox(LX, 'CLIENT', 'your device', '#00D4FF', leftSending)
-      drawBox(RX, 'SERVER', 'github.com',  '#4D9FFF', rightSending)
+      drawBox(LX, 'CLIENT', 'your device', '#7DD3FC', leftSending)
+      drawBox(RX, 'SERVER', 'github.com',  '#A5F3FC', rightSending)
 
       // Lifelines
       const lifeTop = BOX_TOP + BOX_H + 4
@@ -222,9 +222,9 @@ export default function TcpScene() {
         const alpha = Math.sin(phase * Math.PI)
         ctx.save()
         ctx.globalAlpha = alpha
-        ctx.shadowColor = '#00E5A0'
+        ctx.shadowColor = '#A5F3FC'
         ctx.shadowBlur = 12
-        ctx.fillStyle = '#00E5A0'
+        ctx.fillStyle = '#A5F3FC'
         ctx.font = '700 14px monospace'
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'

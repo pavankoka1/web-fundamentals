@@ -5,10 +5,10 @@ import { Text } from '@react-three/drei'
 import * as THREE from 'three'
 
 const PIPELINE = [
-  { label: 'Source', sublabel: 'JS text', x: -4.5, color: '#FF4D6D' },
-  { label: 'AST', sublabel: 'parse', x: -1.5, color: '#FF4D6D' },
-  { label: 'Ignition', sublabel: 'bytecode', x: 1.5, color: '#FF4D6D' },
-  { label: 'TurboFan', sublabel: 'machine code', x: 4.5, color: '#FF4D6D' },
+  { label: 'Source', sublabel: 'JS text', x: -4.5, color: '#FF6B6B' },
+  { label: 'AST', sublabel: 'parse', x: -1.5, color: '#FF6B6B' },
+  { label: 'Ignition', sublabel: 'bytecode', x: 1.5, color: '#FF6B6B' },
+  { label: 'TurboFan', sublabel: 'machine code', x: 4.5, color: '#FF6B6B' },
 ]
 
 function PipelineNode({ label, sublabel, x, color, index }: { label: string; sublabel: string; x: number; color: string; index: number }) {
@@ -39,7 +39,7 @@ function PipelineNode({ label, sublabel, x, color, index }: { label: string; sub
       <Text position={[0, 0.14, 0.06]} fontSize={0.15} color={color} anchorX="center" anchorY="middle">{label}</Text>
       <Text position={[0, -0.12, 0.06]} fontSize={0.1} color="#4A4A6A" anchorX="center" anchorY="middle">{sublabel}</Text>
       {isHot && (
-        <Text position={[0, 0.7, 0.06]} fontSize={0.14} color="#FFB340" anchorX="center" anchorY="middle">🔥 hot!</Text>
+        <Text position={[0, 0.7, 0.06]} fontSize={0.14} color="#67E8F9" anchorX="center" anchorY="middle">🔥 hot!</Text>
       )}
     </group>
   )
@@ -56,7 +56,7 @@ function Packet() {
   return (
     <mesh ref={ref} position={[-5, 0.6, 0]}>
       <sphereGeometry args={[0.1, 12, 12]} />
-      <meshStandardMaterial color="#FF4D6D" emissive="#FF4D6D" emissiveIntensity={5} />
+      <meshStandardMaterial color="#FF6B6B" emissive="#FF6B6B" emissiveIntensity={5} />
     </mesh>
   )
 }
@@ -77,13 +77,13 @@ function DeoptPath() {
   return (
     <group ref={ref}>
       <line geometry={geo}>
-        <lineBasicMaterial color="#FF4D6D" transparent opacity={0.6} />
+        <lineBasicMaterial color="#FF6B6B" transparent opacity={0.6} />
       </line>
       <mesh position={[3, -0.9, 0]}>
         <boxGeometry args={[0.08, 0.08, 0.08]} />
-        <meshStandardMaterial color="#FF4D6D" emissive="#FF4D6D" emissiveIntensity={4} />
+        <meshStandardMaterial color="#FF6B6B" emissive="#FF6B6B" emissiveIntensity={4} />
       </mesh>
-      <Text position={[3, -1.2, 0]} fontSize={0.12} color="#FF4D6D" anchorX="center" anchorY="middle">deopt</Text>
+      <Text position={[3, -1.2, 0]} fontSize={0.12} color="#FF6B6B" anchorX="center" anchorY="middle">deopt</Text>
     </group>
   )
 }
@@ -105,12 +105,12 @@ export default function V8Scene() {
   return (
     <Canvas camera={{ position: [0, 0, 9], fov: 50 }} gl={{ antialias: true, alpha: true }} style={{ width: '100%', height: '100%' }}>
       <ambientLight intensity={0.3} />
-      <pointLight position={[0, 4, 4]} intensity={2} color="#FF4D6D" />
+      <pointLight position={[0, 4, 4]} intensity={2} color="#FF6B6B" />
       {PIPELINE.map((p, i) => <PipelineNode key={p.label} {...p} index={i} />)}
       <Connectors />
       <Packet />
       <DeoptPath />
-      <Text position={[0, 2.0, 0]} fontSize={0.22} color="#FF4D6D" anchorX="center" anchorY="middle">V8 Compilation Pipeline</Text>
+      <Text position={[0, 2.0, 0]} fontSize={0.22} color="#FF6B6B" anchorX="center" anchorY="middle">V8 Compilation Pipeline</Text>
     </Canvas>
   )
 }

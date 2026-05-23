@@ -47,9 +47,9 @@ function UserNode() {
     <group position={[USER.x, USER.y, 0]}>
       <mesh ref={ref}>
         <sphereGeometry args={[0.35, 16, 16]} />
-        <meshStandardMaterial color="#0D0D1A" emissive="#00E5A0" emissiveIntensity={0.4} />
+        <meshStandardMaterial color="#0D0D1A" emissive="#A5F3FC" emissiveIntensity={0.4} />
       </mesh>
-      <Text position={[0, 0.55, 0]} fontSize={0.14} color="#00E5A0" anchorX="center" anchorY="middle">User</Text>
+      <Text position={[0, 0.55, 0]} fontSize={0.14} color="#A5F3FC" anchorX="center" anchorY="middle">User</Text>
     </group>
   )
 }
@@ -95,7 +95,7 @@ function ConnectionLines() {
   return (
     <>
       <line geometry={solidGeo}>
-        <lineBasicMaterial color="#00E5A0" transparent opacity={0.8} />
+        <lineBasicMaterial color="#A5F3FC" transparent opacity={0.8} />
       </line>
       <lineSegments geometry={dashedGeo}>
         <lineBasicMaterial color="#4A4A6A" transparent opacity={0.35} />
@@ -120,7 +120,7 @@ function Packet() {
   return (
     <mesh ref={ref}>
       <sphereGeometry args={[0.1, 12, 12]} />
-      <meshStandardMaterial color="#00E5A0" emissive="#00E5A0" emissiveIntensity={6} />
+      <meshStandardMaterial color="#A5F3FC" emissive="#A5F3FC" emissiveIntensity={6} />
     </mesh>
   )
 }
@@ -129,16 +129,16 @@ export default function CdnScene() {
   return (
     <Canvas camera={{ position: [0, 0.5, 9], fov: 50 }} gl={{ antialias: true, alpha: true }} style={{ width: '100%', height: '100%' }}>
       <ambientLight intensity={0.3} />
-      <pointLight position={[0, 4, 4]} intensity={2} color="#00E5A0" />
-      <ServerNode label={ORIGIN.label} sublabel={ORIGIN.sublabel} x={ORIGIN.x} y={ORIGIN.y} color="#4D9FFF" isOrigin />
+      <pointLight position={[0, 4, 4]} intensity={2} color="#A5F3FC" />
+      <ServerNode label={ORIGIN.label} sublabel={ORIGIN.sublabel} x={ORIGIN.x} y={ORIGIN.y} color="#A5F3FC" isOrigin />
       {POPS.map((p, i) => (
-        <ServerNode key={p.label} {...p} color={i === NEAREST_POP ? '#00E5A0' : '#4A4A6A'} />
+        <ServerNode key={p.label} {...p} color={i === NEAREST_POP ? '#A5F3FC' : '#4A4A6A'} />
       ))}
       <UserNode />
       <ConnectionLines />
       <Packet />
-      <Text position={[POPS[NEAREST_POP].x + 1.6, POPS[NEAREST_POP].y, 0]} fontSize={0.11} color="#00E5A0" anchorX="left" anchorY="middle">nearest</Text>
-      <Text position={[0, 3.4, 0]} fontSize={0.22} color="#00E5A0" anchorX="center" anchorY="middle">CDN Architecture</Text>
+      <Text position={[POPS[NEAREST_POP].x + 1.6, POPS[NEAREST_POP].y, 0]} fontSize={0.11} color="#A5F3FC" anchorX="left" anchorY="middle">nearest</Text>
+      <Text position={[0, 3.4, 0]} fontSize={0.22} color="#A5F3FC" anchorX="center" anchorY="middle">CDN Architecture</Text>
     </Canvas>
   )
 }

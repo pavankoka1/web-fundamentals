@@ -2,10 +2,10 @@
 import { useEffect, useRef } from 'react'
 
 const SEGMENTS = [
-  { text: 'https',              label: 'SCHEME',   sub: 'secure & encrypted', color: '#00D4FF' },
-  { text: '://api.github.com', label: 'HOST',     sub: 'the destination server', color: '#4D9FFF' },
-  { text: '/users/torvalds',   label: 'PATH',     sub: 'the resource location', color: '#A78BFA' },
-  { text: '?tab=repos',        label: 'QUERY',    sub: 'filter parameters', color: '#FFB340' },
+  { text: 'https',              label: 'SCHEME',   sub: 'secure & encrypted', color: '#7DD3FC' },
+  { text: '://api.github.com', label: 'HOST',     sub: 'the destination server', color: '#A5F3FC' },
+  { text: '/users/torvalds',   label: 'PATH',     sub: 'the resource location', color: '#BAE6FD' },
+  { text: '?tab=repos',        label: 'QUERY',    sub: 'filter parameters', color: '#67E8F9' },
   { text: '#about',            label: 'FRAGMENT', sub: 'page anchor / section', color: '#94A3B8' },
 ]
 
@@ -64,7 +64,7 @@ export default function UrlScene() {
 
       // Subtle ambient radial glow
       const glow = ctx.createRadialGradient(W / 2, H * 0.4, 0, W / 2, H * 0.4, W * 0.55)
-      glow.addColorStop(0, 'rgba(0,180,255,0.05)')
+      glow.addColorStop(0, 'rgba(125,211,252,0.05)')
       glow.addColorStop(1, 'transparent')
       ctx.fillStyle = glow
       ctx.fillRect(0, 0, W, H)
@@ -182,7 +182,7 @@ export default function UrlScene() {
         // Blinking cursor
         const typedWidth = ctx.measureText(URL_STRING.slice(0, charsToShow)).width
         if (Math.floor(now / 460) % 2 === 0 && charsToShow < URL_STRING.length) {
-          ctx.fillStyle = '#00D4FF'
+          ctx.fillStyle = '#7DD3FC'
           ctx.globalAlpha = 0.85
           ctx.fillRect(startX + typedWidth + 1, urlY - fontSize * 0.6, 1.5, fontSize * 1.2)
           ctx.globalAlpha = 1
@@ -232,8 +232,8 @@ export default function UrlScene() {
         ctx.save()
         const beam = ctx.createLinearGradient(scanX - 26, 0, scanX + 10, 0)
         beam.addColorStop(0, 'transparent')
-        beam.addColorStop(0.55, 'rgba(0,212,255,0.10)')
-        beam.addColorStop(1, 'rgba(0,212,255,0.55)')
+        beam.addColorStop(0.55, 'rgba(125,211,252,0.10)')
+        beam.addColorStop(1, 'rgba(125,211,252,0.55)')
         ctx.fillStyle = beam
         ctx.fillRect(scanX - 26, urlY - fontSize * 1.5, 36, fontSize * 3)
         ctx.restore()
