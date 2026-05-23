@@ -4,6 +4,7 @@ import { GeistMono } from 'geist/font/mono'
 import { Source_Serif_4 } from 'next/font/google'
 import { KokaMark } from '@/components/brand/KokaMark'
 import { ProgressHairline } from '@/components/layout/ProgressHairline'
+import { StepRail } from '@/components/layout/StepRail'
 import './globals.css'
 
 const sourceSerif = Source_Serif_4({
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <KokaMark />
         <ProgressHairline />
+        <StepRail />
         {children}
       </body>
     </html>
