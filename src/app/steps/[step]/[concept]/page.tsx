@@ -76,15 +76,12 @@ export default async function Page({ params }: Props) {
       <article>
         <TopicHero topic={topic} />
         <ConceptSection example={topic.example} />
-        <div className="px-8 py-4">
-          <h2
-            className="text-xs font-semibold tracking-widest uppercase mb-4"
-            style={{ color: 'var(--color-text-muted)' }}
-          >
+        <section className="mt-20">
+          <h2 className="mb-6 font-mono text-[10px] uppercase tracking-[0.22em] text-[color:var(--color-text-muted)]">
             Diagram
           </h2>
           <DiagramLoader diagramKey={topic.diagramKey} />
-        </div>
+        </section>
         <FactsGrid topic={topic} />
         <InsightCallout insight={topic.insight} />
         {topic.codeDemo && (
