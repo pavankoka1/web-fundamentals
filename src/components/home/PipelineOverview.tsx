@@ -145,13 +145,14 @@ export function PipelineOverview() {
     function drawLabel(i: number, active: boolean) {
       if (!ctx) return;
       const { x, y } = nodePos(i);
-      const fs = Math.max(9, Math.min(11, W / 120));
+      const fs = Math.max(9, Math.min(11, W / 130));
       ctx.font = `500 ${fs}px 'Geist Mono', ui-monospace, monospace`;
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
       const r = Math.max(4, W * 0.0048);
-      // letter-spacing approximation via spaced label
-      const label = STAGE_LABELS[i].split("").join(" ");
+      // No letter-spacing — mono font's tracking is enough; spaced labels overlap
+      // when long words (COMPOSITING) sit next to short ones (DISPLAY).
+      const label = STAGE_LABELS[i];
       ctx.fillStyle = active
         ? "rgba(125, 211, 252, 1)" // var(--color-accent)
         : "rgba(244, 244, 248, 0.45)"; // var(--color-text-muted)
