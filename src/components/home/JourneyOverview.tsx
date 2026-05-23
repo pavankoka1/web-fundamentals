@@ -9,18 +9,20 @@ export function JourneyOverview() {
   return (
     <main className="mx-auto max-w-[840px] px-8 pt-32 pb-24 lg:pl-24">
       <motion.div initial="hidden" animate="visible" variants={stagger(0.08)}>
-        <motion.div variants={fadeUp} className="font-mono text-[var(--type-eyebrow)] uppercase tracking-[0.22em] text-[color:var(--color-text-muted)]">
+        <motion.div variants={fadeUp} style={{ fontSize: 'var(--type-eyebrow)' }} className="font-mono uppercase tracking-[0.22em] text-[color:var(--color-text-muted)]">
           web-internals · tutorial
         </motion.div>
         <motion.h1
           variants={heroEntrance}
-          className="mt-3 font-[family-name:var(--font-display)] text-[var(--type-hero)] leading-[1.05] tracking-[-0.018em] text-[color:var(--color-text-primary)]"
+          style={{ fontSize: 'var(--type-hero)' }}
+          className="mt-3 font-[family-name:var(--font-display)] leading-[1.05] tracking-[-0.018em] text-[color:var(--color-text-primary)]"
         >
           From URL to pixels.<br/>In seven steps.
         </motion.h1>
         <motion.p
           variants={fadeUp}
-          className="mt-6 max-w-[58ch] text-[var(--type-lede)] leading-[1.55] text-[color:var(--color-text-secondary)]"
+          style={{ fontSize: 'var(--type-lede)' }}
+          className="mt-6 max-w-[58ch] leading-[1.55] text-[color:var(--color-text-secondary)]"
         >
           The browser&apos;s journey, beginning when you press Enter and ending when pixels appear on the screen. Each step builds on the last — start anywhere, but the story works best in order.
         </motion.p>
@@ -35,7 +37,7 @@ export function JourneyOverview() {
                 className="group block border-b border-[color:var(--color-border)] py-6 transition-colors hover:bg-[color:var(--color-accent-soft)]"
               >
                 <div className="flex items-baseline gap-6">
-                  <span className="min-w-[2.5rem] font-mono text-[var(--type-eyebrow)] uppercase tracking-[0.22em] text-[color:var(--color-accent)]">
+                  <span style={{ fontSize: 'var(--type-eyebrow)' }} className="min-w-[2.5rem] font-mono uppercase tracking-[0.22em] text-[color:var(--color-accent)]">
                     {String(s.step).padStart(2, "0")}
                   </span>
                   <div className="flex-1">

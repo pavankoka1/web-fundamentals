@@ -21,14 +21,16 @@ export default function TopicHero({ topic }: { topic: Topic }) {
       </motion.div>
       <motion.h1
         variants={heroEntrance}
-        className="mt-4 font-[family-name:var(--font-display)] text-[var(--type-title)] leading-[1.05] tracking-[-0.018em] text-[color:var(--color-text-primary)]"
+        style={{ fontSize: 'var(--type-title)' }}
+        className="mt-4 font-[family-name:var(--font-display)] leading-[1.05] tracking-[-0.018em] text-[color:var(--color-text-primary)]"
       >
         {topic.title}
       </motion.h1>
       {topic.subtitle && (
         <motion.p
           variants={fadeUp}
-          className="mt-6 max-w-[58ch] text-[var(--type-lede)] leading-[1.55] text-[color:var(--color-text-secondary)]"
+          style={{ fontSize: 'var(--type-lede)' }}
+          className="mt-6 max-w-[58ch] leading-[1.55] text-[color:var(--color-text-secondary)]"
         >
           {topic.subtitle}
         </motion.p>

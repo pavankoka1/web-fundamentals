@@ -21,13 +21,15 @@ export function StepLanding({ step, concepts }: Props) {
         </motion.div>
         <motion.h1
           variants={heroEntrance}
-          className="mt-4 font-[family-name:var(--font-display)] text-[var(--type-title)] leading-[1.05] tracking-[-0.018em] text-[color:var(--color-text-primary)]"
+          style={{ fontSize: 'var(--type-title)' }}
+          className="mt-4 font-[family-name:var(--font-display)] leading-[1.05] tracking-[-0.018em] text-[color:var(--color-text-primary)]"
         >
           {step.title}
         </motion.h1>
         <motion.p
           variants={fadeUp}
-          className="mt-6 max-w-[58ch] text-[var(--type-lede)] leading-[1.55] text-[color:var(--color-text-secondary)]"
+          style={{ fontSize: 'var(--type-lede)' }}
+          className="mt-6 max-w-[58ch] leading-[1.55] text-[color:var(--color-text-secondary)]"
         >
           {step.lede}
         </motion.p>
@@ -37,7 +39,8 @@ export function StepLanding({ step, concepts }: Props) {
         </div>
 
         <motion.div
-          className="mt-8 font-mono text-[var(--type-label)] uppercase tracking-[0.3em] text-[color:var(--color-text-muted)]"
+          style={{ fontSize: 'var(--type-label)' }}
+          className="mt-8 font-mono uppercase tracking-[0.3em] text-[color:var(--color-text-muted)]"
           variants={fadeUp}
         >
           Concepts in this step
