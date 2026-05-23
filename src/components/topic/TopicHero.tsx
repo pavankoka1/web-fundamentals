@@ -1,31 +1,43 @@
-'use client'
-import { motion } from 'framer-motion'
-import type { Topic } from '@/data/topics'
-import { phaseColor } from '@/lib/phaseColors'
+"use client";
+import { motion } from "framer-motion";
+import { Topic, TOPIC_STEP_MAP } from "@/data/topics";
+import { stepByNumber } from "@/lib/steps";
+import { StepBadge } from "@/components/atoms/StepBadge";
+import { stagger, fadeUp, heroEntrance } from "@/lib/motion";
 
 export default function TopicHero({ topic }: { topic: Topic }) {
-  const color = phaseColor(topic.phase)
+  const stepInfo = TOPIC_STEP_MAP[topic.id];
+  const step = stepInfo ? stepByNumber(stepInfo.step) : undefined;
+
   return (
-    <div className="relative pt-10 pb-8 px-8">
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-        <div className="flex items-center gap-3 mb-5">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold tracking-wide uppercase"
-            style={{ background: color.bg, color: color.accent, border: `1px solid ${color.dim}` }}>
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: color.accent }} />
-            {topic.phase}
-          </span>
-          <span className="text-xs tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
-            {String(topic.order).padStart(2, '0')} / 16
-          </span>
-        </div>
-        <h1 className="text-4xl font-bold tracking-tight mb-4 leading-none"
-          style={{ color: 'var(--color-text-primary)', letterSpacing: '-0.03em' }}>
-          {topic.title}
-        </h1>
-        <p className="text-lg leading-relaxed max-w-2xl" style={{ color: 'var(--color-text-secondary)' }}>
-          {topic.subtitle}
-        </p>
+    <motion.header initial="hidden" animate="visible" variants={stagger(0.08)}>
+      <motion.div variants={fadeUp}>
+        {step && (
+          <StepBadge
+            step={step.step}
+            label={`${step.title} · ${step.arrow}`}
+          />
+        )}
       </motion.div>
-    </div>
-  )
+      <motion.h1
+        variants={heroEntrance}
+        className="mt-4 font-[family-name:var(--font-display)] text-[var(--type-title)] leading-[1.05] tracking-[-0.018em] text-[color:var(--color-text-primary)]"
+      >
+        {topic.title}
+      </motion.h1>
+      {topic.subtitle && (
+        <motion.p
+          variants={fadeUp}
+          className="mt-6 max-w-[58ch] text-[var(--type-lede)] leading-[1.55] text-[color:var(--color-text-secondary)]"
+        >
+          {topic.subtitle}
+        </motion.p>
+      )}
+      {stepInfo && (
+        <motion.div variants={fadeUp} className="mt-10 font-mono text-[10px] uppercase tracking-[0.22em] text-[color:var(--color-text-dim)]">
+          concept {String(stepInfo.globalOrder).padStart(2, "0")} of 28 · step {String(step?.step ?? 0).padStart(2, "0")}.{stepInfo.order}
+        </motion.div>
+      )}
+    </motion.header>
+  );
 }
