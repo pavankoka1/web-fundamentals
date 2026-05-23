@@ -567,6 +567,548 @@ Modern CDNs also run JavaScript at the edge — same latency win, for dynamic lo
     seoDescription: 'How CDNs and edge networks work: points of presence, cache hit ratios, anycast routing, edge functions, cache key design, and origin shields.',
   },
   {
+    id: 'resource-hints',
+    phase: 'Network',
+    order: 101,
+    title: 'Resource Hints',
+    subtitle: 'Telling the browser what it needs before it knows it needs it.',
+    example: `Resource hints are tiny <link> tags in <head> that promote a future fetch in advance — before the parser reaches the tag that needs it. Each one targets a different stage of the connection lifecycle.
+
+<link rel="dns-prefetch" href="//fonts.gstatic.com"> resolves DNS only. It is cheap, fire-and-forget, and useful when you know you'll hit many third-party origins. Typical savings: 20–120 ms per first request to that origin.
+
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> does the full TCP + TLS handshake on top of DNS. The next request to that origin skips the entire handshake — often 100–500 ms saved. Use it for a small number of critical origins; each open connection costs memory on both ends.
+
+<link rel="preload" as="font" href="/fonts/sans.woff2" type="font/woff2" crossorigin> fetches a specific resource at high priority for imminent use — critical CSS, fonts, the LCP image. preload competes for bandwidth with the current page, so reserve it for resources you know you'll use this navigation. Forgetting the right as / type / crossorigin combination makes the browser fetch the resource a second time when it's actually needed.
+
+<link rel="prefetch" href="/next-page.html"> grabs something at idle priority — a likely-next navigation target. The new Speculation Rules API generalises this with declarative JSON rules and a real prerender mode that loads and runs the destination in a hidden tab.
+
+Every hint trades bandwidth from somewhere else. Over-hinting starves the resources you actually need now.`,
+    facts: [
+      ['dns-prefetch', '20–120 ms saved per first request to a new origin'],
+      ['preload as=', 'style · script · font · image · fetch · document'],
+      ['fetchpriority', 'high · low · auto — refines hint priority'],
+      ['preconnect cost', '1× DNS + 1× TCP + 1× TLS — ~100–500 ms saved'],
+      ['over-hinting', 'every hint competes for bandwidth right now'],
+      ['fonts gotcha', 'preload needs as=font + type + crossorigin or it fetches twice'],
+    ],
+    insight: `Resource hints are a budget tool, not magic. Every hint borrows bandwidth, sockets, and main-thread time from something else on the current page — so promote only the resources whose absence would gate the LCP. The right number of hints on a typical page is small and deliberate.`,
+    diagramKey: 'resource-hints-diagram',
+    sceneKey: 'resource-hints-placeholder',
+    seoDescription: 'How resource hints work: preload, prefetch, preconnect, dns-prefetch, and the Speculation Rules API for telling the browser what to fetch ahead of time.',
+    step: 1,
+    globalOrder: 9,
+    hook: 'preload, prefetch, preconnect, dns-prefetch — small <link> tags that buy you milliseconds. Use them as a budget, not as a sprinkle.',
+    newConcept: true,
+    source: 'wf',
+    codeDemo: {
+      label: 'Preload critical fonts',
+      bad: `<!-- Font is discovered late, after CSS parses and the @font-face rule resolves. -->
+<head>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+
+/* styles.css */
+@font-face {
+  font-family: "Sans";
+  src: url("/fonts/sans.woff2") format("woff2");
+  font-display: swap;
+}`,
+      good: `<!-- Tell the browser about the font before CSS parses. -->
+<head>
+  <link
+    rel="preload"
+    href="/fonts/sans.woff2"
+    as="font"
+    type="font/woff2"
+    crossorigin
+  >
+  <link rel="stylesheet" href="/styles.css">
+</head>`,
+    },
+  },
+  {
+    id: 'resource-loading-priorities',
+    phase: 'Network',
+    order: 102,
+    title: 'Resource Loading & Priorities',
+    subtitle: 'Every fetch has a priority. Most of the time the browser is right. Sometimes it is not.',
+    example: `The browser assigns a priority to every resource as it discovers it: Highest (the HTML document, render-blocking CSS), High (defer/async scripts, fonts, viewport images), Medium (in-viewport images that aren't LCP), Low (preload as=fetch, lazy media), Lowest (lazy-loaded offscreen images).
+
+That ordering decides which sockets get the next bytes when HTTP/2 multiplexes streams over a single connection. Get it wrong and the LCP image waits behind a tracking script.
+
+fetchpriority="high" on a <link>, <script>, or <img> overrides the default. The most common use is the LCP image — tag it explicitly so it isn't demoted behind other in-viewport images. Conversely, fetchpriority="low" on a non-critical preload stops it from stealing bandwidth from rendering work.
+
+Code splitting changes what is even discoverable up front. A dynamic import() returns a Promise and creates its own chunk that is fetched on demand — usually triggered by a route change, an idle callback, or a user interaction. React.lazy() wraps this pattern around components. Vendor chunks (React, lodash) get their own bundle so they cache independently from frequently-changing app code.
+
+For scripts, <script defer> downloads in parallel with parsing, runs after the DOM is fully built, and preserves document order. <script async> downloads in parallel and runs whenever it's ready — order is undefined. defer is the right default; async is only for fully independent scripts like analytics.
+
+Lazy-loading hurts the wrong things if you apply it everywhere. Above-the-fold images — especially the LCP — must not have loading="lazy". A lazy LCP image waits for the layout pass before requesting bytes; that delay shows up directly in the LCP metric.`,
+    facts: [
+      ['fetchpriority', 'high · low · auto — overrides browser default'],
+      ['dynamic import()', 'Promise-returning · creates a separate chunk'],
+      ['defer vs async', 'defer = ordered, after DOM ready · async = first-come, any order'],
+      ['LCP image', 'preload + fetchpriority=high · DO NOT lazy-load'],
+      ['vendor chunks', 'split rarely-changing deps so cache survives app updates'],
+    ],
+    insight: `Priority is a hint, not an instruction — the browser still decides what gets bytes next based on network conditions, connection state, and what is actually rendering. fetchpriority lets you nudge that decision; abusing it makes everything urgent, which is the same as nothing being urgent.`,
+    diagramKey: 'resource-loading-priorities-diagram',
+    sceneKey: 'resource-loading-priorities-placeholder',
+    seoDescription: 'How browsers prioritize resource loading: fetchpriority, code splitting via dynamic import, vendor chunks, defer vs async, and why lazy-loading the LCP image is a mistake.',
+    step: 1,
+    globalOrder: 10,
+    hook: 'The browser assigns a priority to every fetch. Override the default only when you know better — like the LCP image, which must never be lazy.',
+    newConcept: true,
+    source: 'wf',
+    codeDemo: {
+      label: "Don't lazy-load your LCP image",
+      bad: `<!-- Lazy LCP — waits for layout before requesting bytes. -->
+<img
+  src="/hero.jpg"
+  alt="Hero"
+  loading="lazy"
+>`,
+      good: `<!-- Preloaded, high priority, never lazy. -->
+<link
+  rel="preload"
+  as="image"
+  href="/hero.jpg"
+  fetchpriority="high"
+>
+<img
+  src="/hero.jpg"
+  alt="Hero"
+  fetchpriority="high"
+>`,
+    },
+  },
+  {
+    id: 'scripts-during-parsing',
+    phase: 'Browser',
+    order: 103,
+    title: 'Scripts during parsing',
+    subtitle: 'Where V8 first enters the journey — and what it costs to halt the parser.',
+    example: `The HTML parser builds the DOM token by token. When it reaches a <script> without defer or async, it stops. The script is fetched (if external), then parsed and executed synchronously by V8 — all before the parser is allowed to move on.
+
+While that script runs, it can synchronously inject markup into the open stream, mutate nodes the parser already produced, or query elements that haven't been parsed yet. The parser holds. Anything below the script in the document — content, styles, the LCP image — is invisible to the renderer until the script returns.
+
+defer changes the contract. The script downloads in parallel with parsing and runs after the DOM is built, in document order. async also downloads in parallel but runs as soon as the bytes arrive — any order. <script type="module"> is defer by default and resolves its imports before execution. For anything other than tiny inline bootstraps, defer is the right answer.
+
+This is where V8 first runs in the page lifecycle. Every script execution finishes by draining the microtask queue: Promise resolutions, queueMicrotask callbacks, MutationObserver entries. Microtasks flush after every script and before the parser yields back to the browser — a tight chain of resolved Promises can hold rendering hostage as completely as a synchronous loop.
+
+CSS interleaves with this too. CSS the parser hasn't reached doesn't block JavaScript parsing. CSS that is already loading does block JavaScript execution — because the script might call getComputedStyle and the browser refuses to lie. That coupling is why a slow stylesheet can stall an inline script that never touches styles.
+
+Long inline scripts in <head> are the easiest way to delay first paint without realising. Move them below the fold, or defer them, or skip them.`,
+    facts: [
+      ['sync <script>', 'parser blocks for fetch + parse + execute'],
+      ['defer', 'parallel fetch · runs after DOM, in order'],
+      ['async', 'parallel fetch · runs ASAP, any order'],
+      ['modules', 'deferred by default · imports resolve before execution'],
+      ['microtask flush', 'after every script · before the next task'],
+      ['CSS coupling', 'in-flight CSS blocks JS execution that might query styles'],
+    ],
+    insight: `The parser is the boss of the document — every <script> without defer or async is asking permission to interrupt it. The browser grants the request, runs your code, and the page waits. Defer the request, and the parser keeps moving.`,
+    diagramKey: 'scripts-during-parsing-diagram',
+    sceneKey: 'scripts-during-parsing-placeholder',
+    seoDescription: 'How <script> tags interact with the HTML parser: parser blocking, defer, async, modules, microtask flushes, and why V8 first runs here.',
+    step: 2,
+    globalOrder: 13,
+    hook: 'A synchronous <script> tag stops the parser cold while V8 fetches, parses, and runs it. defer keeps the parser moving and runs scripts in order, after the DOM is built.',
+    newConcept: true,
+    source: 'hbr',
+    codeDemo: {
+      label: "Don't block the parser",
+      bad: `<!-- Sync script in <head> — blocks parsing AND first paint. -->
+<head>
+  <script src="/big-app.js"></script>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <h1>Hello</h1>
+</body>`,
+      good: `<!-- Parallel fetch, runs after DOM is built. -->
+<head>
+  <script src="/big-app.js" defer></script>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <h1>Hello</h1>
+</body>`,
+    },
+  },
+  {
+    id: 'style-recalculation',
+    phase: 'Render',
+    order: 104,
+    title: 'Style recalculation',
+    subtitle: 'Resolving which rules apply, and what the final values actually are.',
+    example: `Style recalculation is the step where every dirty DOM node figures out its ComputedStyle. The engine walks the matched rules — applying specificity, then cascade origin, then @layer order, then declaration order — and inheritance fills in whatever the cascade didn't.
+
+After the cascade comes resolution. Custom properties (--color) collapse to their concrete value. Relative units convert: em to px against the element's own font-size, % against the parent or containing block, vw against the viewport. The output is a flat ComputedStyle object hanging off the node — what layout reads when it runs.
+
+Cost scales with two things at once: how many nodes are dirty, and how complex the selectors are. Browsers use bloom filters and selector hashing to reject the vast majority of rules in constant time, but deeply nested descendant combinators (.app .container .row .card .header .title) still force the matcher to walk up ancestor chains for every candidate. Sibling combinators (~, +) are worse — invalidating a child can dirty its siblings.
+
+When DevTools profiling shows long "Recalculate Style" slices, three knobs help. Flatten selectors so most rules match in one hash lookup. Shrink the invalidation surface — toggle a class on a small subtree rather than mutating an attribute on <html>. And avoid synchronous style churn in tight loops, which forces a recalculation on every iteration.
+
+@scope and :scope cap how far a selector can reach upward. Scoped CSS (Shadow DOM, CSS Modules) gives the engine smaller universes to match against, which is why it stays cheap even on enormous component trees.`,
+    facts: [
+      ['output', 'ComputedStyle per node — what layout reads'],
+      ['cost ∝', 'dirty subtree size × selector complexity'],
+      ['bloom filters', 'fast rejection · still O(selectors) worst case'],
+      ['em / vw / %', 'all resolved to px here, against the right reference'],
+      ['scope', ':scope and @scope cap selector reach'],
+      ['custom properties', 'resolved at this step, per element'],
+    ],
+    insight: `Selector complexity is not theoretical — it is runtime cost paid every time anything in that subtree changes. A flat class is one hash lookup. A four-deep combinator is a walk up the tree for every candidate, every recalc.`,
+    diagramKey: 'style-recalculation-diagram',
+    sceneKey: 'style-recalculation-placeholder',
+    seoDescription: 'How style recalculation works: cascade resolution, inheritance, ComputedStyle output, bloom filters, selector complexity, and the cost of dirty subtrees.',
+    step: 3,
+    globalOrder: 14,
+    hook: 'After the DOM and CSSOM are built, the engine resolves which rules apply to which node and computes the final values. The output feeds layout directly.',
+    newConcept: true,
+    source: 'hbr',
+    codeDemo: {
+      label: 'Flat selectors over deep combinators',
+      bad: `/* Four-deep descendant chain. Matcher walks ancestors per candidate. */
+.app .container .row .card .header .title {
+  font-size: 1rem;
+  color: var(--ink);
+}`,
+      good: `/* Flat class. One hash lookup, no walking. */
+.card-title {
+  font-size: 1rem;
+  color: var(--ink);
+}`,
+    },
+  },
+  {
+    id: 'layout-tree-construction',
+    phase: 'Render',
+    order: 105,
+    title: 'Layout tree construction',
+    subtitle: 'Filtering the DOM into the boxes that actually need geometry.',
+    example: `The render tree filtered out elements with no visual role — <head>, <script>, <meta>. The layout tree (Chromium calls the nodes LayoutObjects) is the second filter: it keeps only nodes that participate in geometry, and adds generated content the engine creates on the fly.
+
+display:none removes an element and its entire subtree from the layout tree. The element exists in the DOM, has a ComputedStyle, and can still be queried — but it owns no box, costs nothing to lay out, and contributes nothing to its parent's size.
+
+display:contents is the strange one. The element itself drops its box, but its children are promoted to participate in the parent's layout as direct siblings. Useful for unwrapping wrapper <div>s that exist only for grouping; subtle when combined with flex or grid because the children now answer to the grandparent's layout context.
+
+visibility:hidden keeps the box. The element is in the layout tree, takes up its full space, but paints nothing. Toggling visibility is cheaper than toggling display because the layout tree is stable.
+
+Each LayoutObject carries a pointer to the ComputedStyle of its DOM node. That pointer is the bridge between the cascade and geometry — layout reads ComputedStyle, geometry results write back to a fragment tree, paint walks both.
+
+Pseudo-elements (::before, ::after) are generated here. They aren't in the DOM, but they get LayoutObjects, participate in flex and grid, can match CSS rules, and contribute to ink. Flex and grid containers are recognised at this point too — children are tagged with their containing layout context before layout proper starts the geometry math.`,
+    facts: [
+      ['display:none', 'subtree omitted from layout · cheapest hide'],
+      ['display:contents', 'element box gone · children promoted to parent'],
+      ['visibility:hidden', 'box kept, takes space · skips paint'],
+      ['LayoutObject → ComputedStyle', 'pointer · the bridge to geometry'],
+      ['pseudo-elements', '::before / ::after get their own boxes here'],
+    ],
+    insight: `The smallest the layout tree gets is when whole branches don't render — and that's free performance. display:none isn't a hack; it's a contract with the browser that this subtree doesn't need geometry, paint, or compositor work this frame.`,
+    diagramKey: 'layout-tree-construction-diagram',
+    sceneKey: 'layout-tree-construction-placeholder',
+    seoDescription: 'How the layout tree is built: LayoutObjects, display none vs visibility hidden vs display contents, pseudo-elements, and the ComputedStyle pointer.',
+    step: 3,
+    globalOrder: 16,
+    hook: 'The layout tree is the DOM filtered down to nodes that actually need geometry — and the place where generated content (::before, ::after) becomes real.',
+    newConcept: true,
+    source: 'hbr',
+    codeDemo: {
+      label: 'When you really want it gone',
+      bad: `/* Still in the layout tree. Still takes space. */
+.offscreen-list {
+  visibility: hidden;
+}`,
+      good: `/* Out of the layout tree entirely — or skipped until needed. */
+.offscreen-list {
+  display: none;
+}
+
+/* Or, for content that should come back when scrolled near: */
+.long-section {
+  content-visibility: auto;
+}`,
+    },
+  },
+  {
+    id: 'containment',
+    phase: 'Render',
+    order: 106,
+    title: 'Containment',
+    subtitle: 'Drawing a line around a subtree and telling the browser: the outside cannot see in.',
+    example: `CSS containment is a promise. You tell the engine that whatever happens inside this element won't affect anything outside — its size, its layout, its paint, its scoped counters. The engine accepts the promise and stops propagating changes at the boundary.
+
+contain: layout isolates internal layout. A child resizing inside a contained ancestor cannot ripple up to its grandparent's layout, even if the cascade theoretically allows it. The layout engine simply stops walking outward.
+
+contain: paint clips paint to the element's box and isolates its painting from neighbours. Combined with layout, it caps the blast radius for most updates: a hover effect, a class flip, an animation that touches text inside the container won't dirty paint regions elsewhere on the page.
+
+contain: style scopes counter and quote values. contain: size requires the element to declare its own intrinsic size — children no longer influence the box.
+
+contain: strict bundles all four (layout + paint + style + size) and is the strongest form. It is what virtualised lists, off-screen widgets, and heavy data tables want — anything where the engine should be free to treat the subtree as a sealed unit.
+
+content-visibility: auto is the cousin. It says: skip rendering this element entirely until it scrolls near the viewport. The browser still reserves space (using contain-intrinsic-size as the hint), but doesn't recalc style, lay out children, or paint until needed. On long pages with many independent sections, this can be the single biggest win.
+
+Containment is not free elsewhere. An inherently expensive component is still expensive — but the cost no longer leaks into the rest of the page on every interaction.`,
+    facts: [
+      ['contain: layout', "internal layout doesn't escape"],
+      ['contain: paint', 'paint clipped + isolated'],
+      ['contain: strict', 'layout + paint + style + size — sealed'],
+      ['content-visibility: auto', 'skip rendering off-screen entirely'],
+      ['typical use', 'virtualised lists, heavy widgets, data tables'],
+    ],
+    insight: `Containment is a contract — you promise the engine that nothing inside affects the outside, and the engine rewards you with smaller invalidation regions. Misapply it and you'll see clipped overflow or sized-out children; apply it where it's true and frames get cheaper.`,
+    diagramKey: 'containment-diagram',
+    sceneKey: 'containment-placeholder',
+    seoDescription: 'How CSS containment works: contain layout, paint, style, size, strict, plus content-visibility, and how each caps the blast radius of a change.',
+    step: 4,
+    globalOrder: 18,
+    hook: 'Tell the browser the inside of this element cannot affect the outside, and the layout engine will stop propagating changes at its edge.',
+    newConcept: true,
+    source: 'hbr',
+    codeDemo: {
+      label: 'Cap the blast radius',
+      bad: `/* Nothing isolated. A mutation inside a card can ripple
+   up to the list, the page, and back down to every sibling. */
+.card-list { }
+.card { }`,
+      good: `/* The list isolates layout and style.
+   Each card isolates layout and paint. */
+.card-list {
+  contain: layout style;
+}
+.card {
+  contain: layout paint;
+}`,
+    },
+  },
+  {
+    id: 'display-lists',
+    phase: 'Render',
+    order: 107,
+    title: 'Paint records & display lists',
+    subtitle: "Geometry doesn't make pixels — draw commands do.",
+    example: `Paint walks the layout result and records a flat, ordered sequence of drawing operations. Chromium calls the output a cc::DisplayItemList — a serialisable list of "fill this rect", "draw this text", "apply this shadow", "clip to this path", "blit this image".
+
+The order is the painter's algorithm in disguise. Backgrounds before text. Content before overlays. Stacking contexts collapse their interior into a single contiguous range so the compositor can later treat them as a unit.
+
+This phase is not pixels. Nothing is rasterised yet. The display list is a recipe — small, cheap to replay, cheap to ship to the GPU, and cheap to re-execute at a different scale or DPR. Rasterization, the next step, is where commands become bitmap tiles.
+
+Heavy visual effects add both more items and more raster cost. A 4px box-shadow records one shadow op and rasters a tight blur. A 40px shadow records one op too — but the raster work scales with the blur kernel and the affected area. Filters, masks, large border-radius clips, complex gradients all cost more here. Long Paint slices in DevTools mean either too many items or too-expensive items; the fix is almost always simplification, not parallelisation.
+
+Text is the most expensive single op kind in practice. Shaping, hinting, sub-pixel positioning, ligature resolution, and emoji fallback chains all live inside one "draw text" command — and run on every paint that touches it.`,
+    facts: [
+      ['output', 'cc::DisplayItemList — flat ordered draw ops'],
+      ['ops include', 'fill · stroke · text · shadow · clip · mask · image'],
+      ['order', "back-to-front · painter's algorithm"],
+      ['not pixels', 'rasterization is the next step'],
+      ['text', 'shaping + hinting + fallback — the most expensive op'],
+    ],
+    insight: `Blur radius scales the work — a 4px shadow is cheap, a 40px shadow is a wall. The display list grew by one item; the rasteriser now has to fill a hundred times the area.`,
+    diagramKey: 'display-lists-diagram',
+    sceneKey: 'display-lists-placeholder',
+    seoDescription: 'How paint records draw commands into a display list: cc::DisplayItemList, painter ordering, and why the display list is a recipe — not pixels yet.',
+    step: 5,
+    globalOrder: 19,
+    hook: 'Paint produces a flat, ordered list of draw commands — not pixels. That list is what the rasteriser will execute next.',
+    newConcept: true,
+    source: 'hbr',
+  },
+  {
+    id: 'stacking-contexts',
+    phase: 'Render',
+    order: 108,
+    title: 'Stacking contexts',
+    subtitle: 'Where z-index actually starts over — and why your overlay still does not sit on top.',
+    example: `A stacking context is a subtree of the layout tree that forms its own z-axis ordering scope. Children sort against each other inside the context using their own z-index values. The entire group then participates in its parent's ordering as one atomic unit — its internal z-index numbers are invisible to the outside.
+
+Several properties create one. The classic trigger is position: relative / absolute / fixed with a non-auto z-index. The surprising triggers are everywhere: any transform (even transform: translateZ(0)), any filter, any opacity less than 1, isolation: isolate, will-change for a stacking-creating property, and — most often missed — flex or grid children with z-index set, where you don't even need position.
+
+Once a stacking context exists, a descendant cannot escape it. A child with z-index: 9999 still sorts below its parent's siblings if the parent is in a lower context. This is the source of nearly every "my modal isn't on top" bug: a sibling element earlier in the document accidentally created a stacking context, and the modal lives inside something underneath it.
+
+The compositor cares about contexts too. They are how it decides what can be promoted into its own layer, how it can squash neighbouring elements into shared backing stores, and how it preserves correct ordering when those layers animate independently.
+
+DevTools Elements panel → Layers (and the 3D view in Rendering) is the fastest way to see the actual tree. When ordering goes wrong, the boundary is always there.`,
+    facts: [
+      ['triggers', 'opacity < 1 · transform · filter · isolation · z-index w/ position'],
+      ['surprise', 'z-index on flex/grid children — no position needed'],
+      ['boundary', "child z-index can't escape its parent's context"],
+      ['atomic', 'whole context sorts as one unit against siblings'],
+      ['devtools', 'Elements → Layers reveals the actual tree'],
+    ],
+    insight: `Every transform creates a stacking context — which is how compositing decides what can be promoted to its own layer. That single line, "transform: translateZ(0)", was never really about the GPU. It was about creating a boundary the compositor could trust.`,
+    diagramKey: 'stacking-contexts-diagram',
+    sceneKey: 'stacking-contexts-placeholder',
+    seoDescription: 'How CSS stacking contexts work: what creates them, z-index isolation, why overlays sometimes refuse to sit on top, and how the compositor uses contexts.',
+    step: 5,
+    globalOrder: 20,
+    hook: 'A stacking context is its own z-axis universe. z-index inside it cannot escape — which is why your overlay sometimes refuses to sit on top.',
+    newConcept: true,
+    source: 'hbr',
+  },
+  {
+    id: 'property-trees',
+    phase: 'Render',
+    order: 109,
+    title: 'Property trees & pre-paint',
+    subtitle: 'How the compositor knows what to redo without redoing everything.',
+    example: `Between paint and compositing sits a phase Chromium calls pre-paint. It walks the layout result and builds property trees — five of them, conceptually: Transform, Clip, Effect, Opacity, and Scroll. The internal type is cc::PropertyTree.
+
+Instead of deciding "this element gets a composited layer because it has opacity < 1" up front, the engine records the effect hierarchy as abstract nodes. Every painted item carries a reference to the chain of property-tree nodes that apply to it: which transforms it inherits, which clips contain it, which effects wrap it, which scrollers move it.
+
+This is the foundation of Composite After Paint (CAP). Paint first, layerise after, with the property trees telling the layerisation step what could be safely grouped and what must stay independent.
+
+The payoff is targeted updates. When opacity changes on a single element, the engine doesn't repaint or relayout — it mutates a value on the Effect tree and the compositor re-applies it on the next frame. When a transform animates, the Transform tree node is updated on the compositor thread and the GPU just repositions the existing texture. Style, layout, and paint all sleep through that frame.
+
+When DevTools shows "Composite Only" updates, this is the mechanism. The display list didn't change; only the property tree did.`,
+    facts: [
+      ['trees', 'Transform · Clip · Effect · Opacity · Scroll'],
+      ['chromium type', 'cc::PropertyTree'],
+      ['enables', 'compositor-only updates (no repaint)'],
+      ['CAP', 'Composite After Paint — paint first, layerise after'],
+      ['records', 'effect chain per painted item, not eager layers'],
+    ],
+    insight: `Property trees are why transform and opacity animations stay cheap. They touch the tree, not the paint — and the compositor replays the previous frame's pixels with new values baked in.`,
+    diagramKey: 'property-trees-diagram',
+    sceneKey: 'property-trees-placeholder',
+    seoDescription: 'How pre-paint and property trees work: Transform, Clip, Effect, Opacity, Scroll trees, cc::PropertyTree, Composite After Paint, and compositor-only updates.',
+    step: 5,
+    globalOrder: 21,
+    hook: 'Pre-paint records the effect hierarchy as abstract property-tree nodes. That structure is what makes transform and opacity animations almost free.',
+    newConcept: true,
+    source: 'hbr',
+  },
+  {
+    id: 'layer-promotion',
+    phase: 'Render',
+    order: 110,
+    title: 'Layer promotion',
+    subtitle: 'When paint output graduates to its own composited surface.',
+    example: `After paint and pre-paint, the engine decides which display-list chunks become composited layers — their own GPU-backed surfaces the compositor can move, fade, and combine independently. Chromium's output type is cc::Layer.
+
+Composite After Paint (CAP, Chrome 94+) flipped the order on the old engine. It paints first, then groups paint chunks that share compatible property-tree state into layers. The old engine guessed up front and was often wrong; CAP measures and is usually right.
+
+Promotion is either explicit or implicit. Explicit: you asked for it via will-change: transform, will-change: opacity, transform: translateZ(0), or implicitly by using position: fixed. Implicit: the compositor needs a separate surface because an element overlaps a promoted layer and z-order must be preserved — promoting it is cheaper than recomputing the underlying layer on every frame.
+
+Implicit promotions are the source of most "where did all these layers come from" surprises. A single will-change on a header can cause every overlapping card below to acquire its own layer.
+
+Each layer carries cost. A GPU texture of width × height × 4 bytes (uncompressed RGBA), the bandwidth to commit and present it, the scheduler overhead of raster work for its tiles. Hundreds of layers on a phone is how you cook the GPU and earn checkerboarding.
+
+The discipline is symmetrical to the trick: promote when you have an animation that needs its own surface, then remove will-change the moment it ends. Hinting forever is paying GPU rent for a one-second transition.`,
+    facts: [
+      ['explicit', 'will-change · transform: translateZ(0) · position: fixed'],
+      ['implicit', 'overlap with a promoted layer + z-order to preserve'],
+      ['cost per layer', 'GPU texture memory + raster + commit'],
+      ['CAP', 'paint first, group compatible chunks, then layerise'],
+      ['cleanup', 'remove will-change after the animation ends'],
+    ],
+    insight: `Every promoted layer is a promise to the GPU — keep it short. Will-change forever is a memory leak you pay in VRAM, not in JavaScript heap.`,
+    diagramKey: 'layer-promotion-diagram',
+    sceneKey: 'layer-promotion-placeholder',
+    seoDescription: 'How browsers promote elements into composited layers: will-change, transform hacks, implicit promotion, GPU texture cost, and Composite After Paint.',
+    step: 6,
+    globalOrder: 23,
+    hook: 'Promotion moves paint output into its own GPU surface. Cheap during an animation; expensive if you forget to clean up after.',
+    newConcept: true,
+    source: 'hbr',
+  },
+  {
+    id: 'commit-and-compositor-thread',
+    phase: 'Render',
+    order: 111,
+    title: 'Commit & the compositor thread',
+    subtitle: 'The atomic handoff from main thread to GPU.',
+    example: `Commit is the brief, atomic handover. The main thread copies the latest display list, property trees, and layer tree state into structures owned by the compositor thread — Chromium's cc::LayerTreeHost. For the duration of that copy, the main thread blocks. When commit finishes, JavaScript can run again immediately.
+
+From that moment, the compositor thread owns the frame. It scrolls layers, advances transform and opacity animations, schedules raster work, and assembles compositor frames for the GPU — entirely independently of whether the main thread is busy. This is why a heavy React reconciliation can run for 200 ms while scroll and CSS-driven motion stay smooth: the compositor is on its own thread, not yours.
+
+It is not unlimited. Raster workers still have to fill tiles, GPU bandwidth caps how much can be presented per frame, and the Viz process (the cross-process compositor that aggregates frames from all renderers and presents to the screen) has its own queue.
+
+Large commits are real work. Many promoted layers, wide damage regions, big invalidations, huge tiles — the commit copy gets longer and the main thread blocks proportionally. Most of the time commit is sub-millisecond. When it isn't, the cure is fewer layers or smaller invalidation regions, not faster JavaScript.
+
+Passive event listeners (addEventListener("touchstart", fn, { passive: true })) tell the browser the handler won't call preventDefault. The compositor is then free to scroll without waiting for the main thread to confirm. Omit the flag, and every touch acquires a lock on the main thread before the compositor can move a pixel — which is exactly how scroll jank gets created.`,
+    facts: [
+      ['handoff', 'main → compositor · atomic copy'],
+      ['cc::LayerTreeHost', 'what the compositor owns after commit'],
+      ['why scroll stays smooth', 'compositor scrolls without main-thread paint'],
+      ['large commits cost', 'wide damage = real time, not free'],
+      ['passive listeners', "{ passive: true } lets compositor scroll without waiting"],
+    ],
+    insight: `Animating transform is the compositor's job. Animating top is the main thread's headache. The handoff at commit is where that distinction starts paying off — or starts costing you frames.`,
+    diagramKey: 'commit-and-compositor-thread-diagram',
+    sceneKey: 'commit-and-compositor-thread-placeholder',
+    seoDescription: 'How commit works: the atomic handoff from main thread to compositor thread, cc::LayerTreeHost, passive listeners, and why compositor-driven scroll stays smooth.',
+    step: 6,
+    globalOrder: 24,
+    hook: 'Commit is the atomic copy that moves the frame from main thread to compositor. After it, the GPU side runs on its own clock.',
+    newConcept: true,
+    source: 'hbr',
+  },
+  {
+    id: 'tiling-rasterization',
+    phase: 'Render',
+    order: 112,
+    title: 'Tiling & rasterization',
+    subtitle: 'Where draw commands finally become pixels.',
+    example: `Promoted layers — Chromium calls the painted backing cc::PictureLayer — get split into fixed-size tiles. The typical logical tile is 256×256 CSS pixels; the actual device-pixel tile scales with devicePixelRatio, so a 256×256 logical tile is 512×512 device pixels at DPR 2.
+
+Rasterization is the step that executes the display list for each tile into bitmap textures. The work runs on raster worker threads (CPU) and/or directly on the GPU through Skia, which targets the platform's modern API: Vulkan on Linux/Android, Metal on macOS/iOS, D3D12 on Windows.
+
+Memory math is straightforward and brutal. Each tile is roughly width × height × 4 bytes (uncompressed RGBA). On many phones the GPU shares system RAM with the CPU, so big layers and many tiles eat into the same budget the rest of the app and the OS are using. A page with a few hundred promoted layers can consume hundreds of megabytes of VRAM before you notice.
+
+Scrolling shifts which tiles matter. The compositor prioritises the ones near the viewport and decommissions ones far outside it. On heavy pages, a fast fling can outpace the raster workers — the page shows checkerboard placeholder tiles for a few frames until the bitmaps catch up.
+
+Tile cost is paint cost in disguise. A full-screen fixed background, a heavy filter, an expensive mask — each enlarges the work the rasteriser has to do per tile. If the GPU profile is hot, simplifying paint upstream is almost always the fix; throwing more cores at it rarely helps.`,
+    facts: [
+      ['tile size', '~256×256 CSS px · device px scales with DPR'],
+      ['raster path', 'Skia → GPU (Vulkan · Metal · D3D12)'],
+      ['memory ≈', 'w × h × 4 bytes per tile · unified on mobile'],
+      ['checkerboarding', 'fast scroll outpacing raster'],
+      ['workers', 'raster runs on dedicated worker threads + GPU'],
+    ],
+    insight: `Tiling is the browser's batching strategy. Small dirty regions ship cheaply because only their tiles need re-rasterising; big ones don't, because every tile they touch has to be redrawn end to end.`,
+    diagramKey: 'tiling-rasterization-diagram',
+    sceneKey: 'tiling-rasterization-placeholder',
+    seoDescription: 'How tiling and rasterization work: cc::PictureLayer, tile size, Skia targeting Vulkan/Metal/D3D12, raster workers, VRAM cost, and checkerboarding.',
+    step: 6,
+    globalOrder: 25,
+    hook: 'Promoted layers are split into tiles. Each tile is rasterised independently — on a worker thread, on the GPU, or both.',
+    newConcept: true,
+    source: 'hbr',
+  },
+  {
+    id: 'vsync-display',
+    phase: 'Optimize',
+    order: 113,
+    title: 'VSync & the display',
+    subtitle: 'The heartbeat that times everything.',
+    example: `Display hardware refreshes at a fixed rate. 60 Hz panels paint a new frame every 16.67 ms. 120 Hz phone displays and gaming monitors halve that to 8.33 ms. Variable refresh rate (VRR) panels — ProMotion, FreeSync — adjust the interval frame by frame within a range.
+
+VSync is the vertical synchronisation signal the panel raises when it is ready to accept the next buffer. The browser's frame scheduler listens for that pulse and uses it as the heartbeat for the entire pipeline — rAF callbacks fire, style recalculates, layout runs, paint records, commit hands off to the compositor, the compositor presents the frame.
+
+Hit VSync, and the user sees smooth motion. Miss it, and the panel re-displays the previous frame for another full interval. One miss at 60 Hz is 16.67 ms of stutter. Two consecutive misses crosses the threshold where most people notice. Animation jank is detected faster than navigation delay because the eye is tuned for motion discontinuities.
+
+The frame budget shrinks under conditions you don't control. Thermal throttling on a phone halves CPU and GPU clocks. A 120 Hz display gives you half the time of a 60 Hz one for identical work. Background tabs and other apps compete for the same GPU. The "16 ms budget" is a starting point, not a guarantee.
+
+This is why the only contract that matters is: be ready when VSync arrives. Everything upstream — JavaScript scheduling, style recalc, layout, paint, raster — exists to deliver a frame before the next pulse. Miss it, and the work was wasted anyway.`,
+    facts: [
+      ['60 Hz', '16.67 ms per frame'],
+      ['120 Hz', '8.33 ms per frame'],
+      ['vsync', 'vertical sync signal · scheduler heartbeat'],
+      ['miss vsync', 'frame dropped or re-displayed · perceived stutter'],
+      ['VRR', 'variable refresh — budget changes per frame'],
+    ],
+    insight: `The screen waits for no one. Everything upstream has to be ready when VSync arrives — and the budget shrinks whenever the user picks up a faster phone, holds the device too long, or opens another app.`,
+    diagramKey: 'vsync-display-diagram',
+    sceneKey: 'vsync-display-placeholder',
+    seoDescription: 'How VSync and display refresh rates drive the rendering pipeline: 60 Hz vs 120 Hz frame budgets, VRR, dropped frames, and why the screen waits for no one.',
+    step: 7,
+    globalOrder: 27,
+    hook: 'The panel raises VSync when it is ready for a new frame. Everything upstream — your JavaScript, the render pipeline, the compositor — exists to meet that deadline.',
+    newConcept: true,
+    source: 'hbr',
+  },
+  {
     id: 'service-workers',
     phase: 'Optimize',
     order: 17,
@@ -633,43 +1175,72 @@ export function getTopicsByPhase(phase: Phase): Topic[] {
 }
 
 export function getAdjacentTopics(slug: string): { prev: Topic | null; next: Topic | null } {
-  const idx = topics.findIndex(t => t.id === slug)
+  // Navigate by globalOrder across the 28-concept tutorial sequence, so prev/next
+  // flow through steps in the correct order regardless of insertion order in topics[].
+  const ordered = topics
+    .filter(t => TOPIC_STEP_MAP[t.id])
+    .sort(
+      (a, b) =>
+        (TOPIC_STEP_MAP[a.id].globalOrder ?? 0) -
+        (TOPIC_STEP_MAP[b.id].globalOrder ?? 0),
+    )
+  const idx = ordered.findIndex(t => t.id === slug)
+  if (idx === -1) {
+    // Fallback to legacy array-order behaviour for slugs not in the new map
+    const lidx = topics.findIndex(t => t.id === slug)
+    return {
+      prev: lidx > 0 ? topics[lidx - 1] : null,
+      next: lidx >= 0 && lidx < topics.length - 1 ? topics[lidx + 1] : null,
+    }
+  }
   return {
-    prev: idx > 0 ? topics[idx - 1] : null,
-    next: idx < topics.length - 1 ? topics[idx + 1] : null,
+    prev: idx > 0 ? ordered[idx - 1] : null,
+    next: idx < ordered.length - 1 ? ordered[idx + 1] : null,
   }
 }
 
 // Step assignment — maps each topic.id to its new step + position
 export const TOPIC_STEP_MAP: Record<string, { step: number; order: number; globalOrder: number }> = {
-  // Step 1 — Network & transport (existing 8 + 2 new in Phase E)
-  "url-parsing":        { step: 1, order: 1, globalOrder: 1 },
-  "service-workers":    { step: 1, order: 2, globalOrder: 2 },
-  "dns-resolution":     { step: 1, order: 3, globalOrder: 3 },
-  "tcp-connection":     { step: 1, order: 4, globalOrder: 4 },
-  "tls-handshake":      { step: 1, order: 5, globalOrder: 5 },
-  "http-request":       { step: 1, order: 6, globalOrder: 6 },
-  "http-caching":       { step: 1, order: 7, globalOrder: 7 },
-  "cdn-edge":           { step: 1, order: 8, globalOrder: 8 },
-  // Step 2 — Parsing
-  "html-parsing":       { step: 2, order: 1, globalOrder: 11 },
-  "css-parsing":        { step: 2, order: 2, globalOrder: 12 },
-  // v8-engine and event-loop fold into scripts-during-parsing (Phase E)
-  "v8-engine":          { step: 2, order: 3, globalOrder: 13 },
-  "event-loop":         { step: 2, order: 3, globalOrder: 13 },
-  // Step 3
-  "render-tree":        { step: 3, order: 2, globalOrder: 15 },
-  // Step 4
-  "layout":             { step: 4, order: 1, globalOrder: 17 },
-  // Step 5
-  "paint":              { step: 5, order: 4, globalOrder: 22 },
-  // Step 6
-  "compositing":        { step: 6, order: 4, globalOrder: 26 },
-  // Step 7
-  "frame-budget":       { step: 7, order: 2, globalOrder: 28 },
+  // Step 1 — Network & transport (8 existing + 2 new in Phase E = 10)
+  "url-parsing":                  { step: 1, order: 1,  globalOrder: 1  },
+  "service-workers":              { step: 1, order: 2,  globalOrder: 2  },
+  "dns-resolution":               { step: 1, order: 3,  globalOrder: 3  },
+  "tcp-connection":               { step: 1, order: 4,  globalOrder: 4  },
+  "tls-handshake":                { step: 1, order: 5,  globalOrder: 5  },
+  "http-request":                 { step: 1, order: 6,  globalOrder: 6  },
+  "http-caching":                 { step: 1, order: 7,  globalOrder: 7  },
+  "cdn-edge":                     { step: 1, order: 8,  globalOrder: 8  },
+  "resource-hints":               { step: 1, order: 9,  globalOrder: 9  },
+  "resource-loading-priorities":  { step: 1, order: 10, globalOrder: 10 },
+  // Step 2 — Parsing (3 total). v8-engine + event-loop fold into scripts-during-parsing
+  // and are removed from the map so they no longer generate step listings or pages.
+  "html-parsing":                 { step: 2, order: 1,  globalOrder: 11 },
+  "css-parsing":                  { step: 2, order: 2,  globalOrder: 12 },
+  "scripts-during-parsing":       { step: 2, order: 3,  globalOrder: 13 },
+  // Step 3 — Style & tree construction (3 total)
+  "style-recalculation":          { step: 3, order: 1,  globalOrder: 14 },
+  "render-tree":                  { step: 3, order: 2,  globalOrder: 15 },
+  "layout-tree-construction":     { step: 3, order: 3,  globalOrder: 16 },
+  // Step 4 — Layout (2 total)
+  "layout":                       { step: 4, order: 1,  globalOrder: 17 },
+  "containment":                  { step: 4, order: 2,  globalOrder: 18 },
+  // Step 5 — Paint (4 total)
+  "display-lists":                { step: 5, order: 1,  globalOrder: 19 },
+  "stacking-contexts":            { step: 5, order: 2,  globalOrder: 20 },
+  "property-trees":               { step: 5, order: 3,  globalOrder: 21 },
+  "paint":                        { step: 5, order: 4,  globalOrder: 22 },
+  // Step 6 — Compositing (4 total)
+  "layer-promotion":              { step: 6, order: 1,  globalOrder: 23 },
+  "commit-and-compositor-thread": { step: 6, order: 2,  globalOrder: 24 },
+  "tiling-rasterization":         { step: 6, order: 3,  globalOrder: 25 },
+  "compositing":                  { step: 6, order: 4,  globalOrder: 26 },
+  // Step 7 — Display (2 total)
+  "vsync-display":                { step: 7, order: 1,  globalOrder: 27 },
+  "frame-budget":                 { step: 7, order: 2,  globalOrder: 28 },
 };
 
 export const TOPIC_SOURCES: Record<string, "original" | "hbr" | "wf"> = {
+  // Step 1
   "url-parsing": "original",
   "service-workers": "original",
   "dns-resolution": "original",
@@ -678,14 +1249,31 @@ export const TOPIC_SOURCES: Record<string, "original" | "hbr" | "wf"> = {
   "http-request": "original",
   "http-caching": "original",
   "cdn-edge": "original",
+  "resource-hints": "wf",
+  "resource-loading-priorities": "wf",
+  // Step 2
   "html-parsing": "original",
   "css-parsing": "original",
-  "v8-engine": "original",
-  "event-loop": "original",
+  "scripts-during-parsing": "hbr",
+  // Step 3
+  "style-recalculation": "hbr",
   "render-tree": "original",
+  "layout-tree-construction": "hbr",
+  // Step 4
   "layout": "original",
+  "containment": "hbr",
+  // Step 5
+  "display-lists": "hbr",
+  "stacking-contexts": "hbr",
+  "property-trees": "hbr",
   "paint": "original",
+  // Step 6
+  "layer-promotion": "hbr",
+  "commit-and-compositor-thread": "hbr",
+  "tiling-rasterization": "hbr",
   "compositing": "original",
+  // Step 7
+  "vsync-display": "hbr",
   "frame-budget": "original",
 };
 
