@@ -5,6 +5,7 @@ import { Source_Serif_4 } from 'next/font/google'
 import { KokaMark } from '@/components/brand/KokaMark'
 import { ProgressHairline } from '@/components/layout/ProgressHairline'
 import { StepRail } from '@/components/layout/StepRail'
+import { PageTransition } from '@/components/layout/PageTransition'
 import './globals.css'
 
 const sourceSerif = Source_Serif_4({
@@ -47,7 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <KokaMark />
         <ProgressHairline />
         <StepRail />
-        {children}
+        <PageTransition>{children}</PageTransition>
       </body>
     </html>
   )
