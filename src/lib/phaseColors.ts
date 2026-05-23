@@ -1,46 +1,50 @@
 export type Phase = 'Network' | 'Browser' | 'Render' | 'Execute' | 'Optimize'
 
-export const PHASE_COLORS: Record<Phase, {
+export type PhaseColor = {
   accent: string
   bg: string
   dim: string
   text: string
   glow: string
-}> = {
+}
+
+// Each phase variant is a subtle shift on the ice-cyan family.
+// Same hue range, gentle saturation/luminance variation per phase.
+export const PHASE_COLORS: Record<Phase, PhaseColor> = {
   Network: {
-    accent: '#00D4FF',
-    bg: '#001A20',
-    dim: '#004455',
-    text: 'text-network',
-    glow: '0 0 20px rgba(0,212,255,0.4)',
+    accent: '#7DD3FC',                          // base ice cyan
+    bg: 'rgba(125, 211, 252, 0.06)',
+    dim: 'rgba(125, 211, 252, 0.35)',
+    text: '#F4F4F8',
+    glow: 'rgba(125, 211, 252, 0.18)',
   },
   Browser: {
-    accent: '#4D9FFF',
-    bg: '#001020',
-    dim: '#003366',
-    text: 'text-browser',
-    glow: '0 0 20px rgba(77,159,255,0.4)',
+    accent: '#A5F3FC',                          // slightly lighter
+    bg: 'rgba(165, 243, 252, 0.06)',
+    dim: 'rgba(165, 243, 252, 0.35)',
+    text: '#F4F4F8',
+    glow: 'rgba(165, 243, 252, 0.18)',
   },
   Render: {
-    accent: '#FFB340',
-    bg: '#1F1200',
-    dim: '#553500',
-    text: 'text-render',
-    glow: '0 0 20px rgba(255,179,64,0.4)',
+    accent: '#67E8F9',                          // cyan
+    bg: 'rgba(103, 232, 249, 0.06)',
+    dim: 'rgba(103, 232, 249, 0.35)',
+    text: '#F4F4F8',
+    glow: 'rgba(103, 232, 249, 0.18)',
   },
   Execute: {
-    accent: '#FF4D6D',
-    bg: '#1F000A',
-    dim: '#550020',
-    text: 'text-execute',
-    glow: '0 0 20px rgba(255,77,109,0.4)',
+    accent: '#7DD3FC',                          // base ice cyan again
+    bg: 'rgba(125, 211, 252, 0.06)',
+    dim: 'rgba(125, 211, 252, 0.35)',
+    text: '#F4F4F8',
+    glow: 'rgba(125, 211, 252, 0.18)',
   },
   Optimize: {
-    accent: '#00E5A0',
-    bg: '#001F12',
-    dim: '#004433',
-    text: 'text-optimize',
-    glow: '0 0 20px rgba(0,229,160,0.4)',
+    accent: '#BAE6FD',                          // softest pale cyan
+    bg: 'rgba(186, 230, 253, 0.06)',
+    dim: 'rgba(186, 230, 253, 0.35)',
+    text: '#F4F4F8',
+    glow: 'rgba(186, 230, 253, 0.18)',
   },
 }
 
