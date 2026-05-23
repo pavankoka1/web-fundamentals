@@ -46,7 +46,7 @@ export function StepLanding({ step, concepts }: Props) {
           Concepts in this step
         </motion.div>
 
-        <motion.div className="mt-4" variants={stagger(0.06)}>
+        <motion.div className="mt-4 flex flex-col gap-2" variants={stagger(0.06)}>
           {concepts.map((c) => {
             const m = TOPIC_STEP_MAP[c.id];
             return (

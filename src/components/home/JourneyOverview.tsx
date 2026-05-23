@@ -29,15 +29,20 @@ export function JourneyOverview() {
 
         <div className="mt-12"><GradientRule /></div>
 
-        <motion.div className="mt-8" variants={stagger(0.06)}>
+        <motion.div className="mt-8 flex flex-col gap-2" variants={stagger(0.06)}>
           {STEPS.map((s) => (
-            <motion.div key={s.step} variants={fadeUp}>
+            <motion.div
+              key={s.step}
+              variants={fadeUp}
+              whileHover={{ x: 4 }}
+              transition={{ type: "spring", stiffness: 300, damping: 24 }}
+            >
               <Link
                 href={`/steps/${s.slug}`}
-                className="group block border-b border-[color:var(--color-border)] py-6 transition-colors hover:bg-[color:var(--color-accent-soft)]"
+                className="group block rounded-md border border-[color:var(--color-border)] bg-transparent px-6 py-6 transition-all duration-200 hover:border-[color:var(--color-accent-line)] hover:bg-[color:var(--color-accent-soft)] hover:shadow-[0_0_24px_-8px_var(--color-accent-glow)] lg:px-8"
               >
                 <div className="flex items-baseline gap-6">
-                  <span style={{ fontSize: 'var(--type-eyebrow)' }} className="min-w-[2.5rem] font-mono uppercase tracking-[0.22em] text-[color:var(--color-accent)]">
+                  <span style={{ fontSize: 'var(--type-eyebrow)' }} className="min-w-[2.5rem] font-mono font-medium uppercase tracking-[0.22em] text-[color:var(--color-accent)]">
                     {String(s.step).padStart(2, "0")}
                   </span>
                   <div className="flex-1">
@@ -51,7 +56,7 @@ export function JourneyOverview() {
                       {s.lede}
                     </p>
                   </div>
-                  <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[color:var(--color-text-dim)] transition-colors group-hover:text-[color:var(--color-accent)]">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[color:var(--color-text-dim)] opacity-60 transition-all duration-200 group-hover:opacity-100 group-hover:text-[color:var(--color-accent)] group-hover:translate-x-0.5">
                     begin →
                   </span>
                 </div>
