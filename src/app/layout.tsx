@@ -1,7 +1,15 @@
 import type { Metadata } from 'next'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
+import { Source_Serif_4 } from 'next/font/google'
 import './globals.css'
+
+const sourceSerif = Source_Serif_4({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  display: 'swap',
+  variable: '--font-display',
+})
 
 const BASE_URL = 'https://web-internals.dev'
 
@@ -31,7 +39,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable} ${sourceSerif.variable}`}>
       <body>
         {children}
       </body>
