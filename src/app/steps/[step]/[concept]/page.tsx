@@ -86,7 +86,7 @@ export default async function Page({ params }: Props) {
           <DiagramLoader diagramKey={topic.diagramKey} />
         </div>
         <FactsGrid topic={topic} />
-        <InsightCallout insight={topic.insight} phase={topic.phase} />
+        <InsightCallout insight={topic.insight} />
         {topic.codeDemo && (
           <CodeDemo
             bad={topic.codeDemo.bad}
