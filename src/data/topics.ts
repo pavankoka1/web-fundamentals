@@ -115,6 +115,9 @@ HTTP/3 (the latest version) eliminates this entirely by using QUIC underneath.`,
     diagramKey: 'tcp',
     sceneKey: 'tcp',
     seoDescription: 'How TCP 3-way handshake works: SYN/SYN-ACK/ACK sequence, slow start, head-of-line blocking, and why HTTP/3 QUIC eliminates this round trip.',
+    pitfalls: [
+      'Connection pools have limits — Chrome caps at 6 connections per origin over HTTP/1.1. HTTP/2 multiplexing collapses these onto one connection but doesn\'t solve cross-origin sharding.',
+    ],
   },
   {
     id: 'tls-handshake',
@@ -145,6 +148,9 @@ Every request from here is encrypted. Nobody watching the wire can read it.`,
     diagramKey: 'tls',
     sceneKey: 'tls',
     seoDescription: 'How TLS handshake works: certificate chain, Diffie-Hellman key exchange, TLS 1.3 improvements, 0-RTT resumption, and why HTTPS still leaks the domain name.',
+    pitfalls: [
+      'TLS 1.2 is two round trips; TLS 1.3 is one. Force TLS 1.3 on your origin if you have any control over the server.',
+    ],
   },
   {
     id: 'http-request',
@@ -333,6 +339,11 @@ and then bounces back up to resize parents and shift siblings.`,
     sceneKey: 'layout',
     seoDescription: 'How browser layout works: two-pass traversal, layout invalidation, blast radius, layout thrashing, and CSS containment.',
     outputs: { label: 'output', type: 'fragment tree (positions + sizes)' },
+    pitfalls: [
+      'Reading offsetWidth / clientHeight / getBoundingClientRect after a write forces a synchronous layout (forced reflow). In a loop this is layout thrashing — the engine cannot batch.',
+      'Animating layout-affecting properties (width, top, margin) makes every frame land in this step. Prefer transform and opacity, which stay on the compositor.',
+      'Nested flex inside flex inside flex multiplies intrinsic-sizing passes. Flat grids and explicit dimensions cut blast radius.',
+    ],
   },
   {
     id: 'paint',
@@ -367,6 +378,10 @@ What does NOT trigger repaint: transform and opacity changes (GPU-only).`,
     sceneKey: 'paint',
     seoDescription: 'How browser painting works: display lists, stacking contexts, Composite After Paint, rasterization, paint invalidation, and why transform/opacity are the only smooth animation properties.',
     outputs: { label: 'output', type: 'cc::DisplayItemList' },
+    pitfalls: [
+      'Color changes skip Layout entirely but still trigger Paint and Compositing. They\'re cheap, not free.',
+      'Large blur radius (box-shadow: 0 0 80px …) cascades raster cost across many tiles. Keep effects bounded.',
+    ],
   },
   {
     id: 'compositing',
@@ -401,6 +416,10 @@ When transform: translateX(100px) changes on Layer 2:
     sceneKey: 'compositing',
     seoDescription: 'How browser compositing works: commit, GPU layers, compositor thread, layer promotion, layer squashing, layer explosion, and passive event listeners.',
     outputs: { label: 'output', type: 'compositor frame' },
+    pitfalls: [
+      'The golden rule: animate only properties the compositor can handle alone — transform and opacity. Anything else forces paint or layout every frame.',
+      'backdrop-filter and large filter: blur(…) recreate compositing cost per frame even when other properties are compositor-friendly.',
+    ],
   },
   {
     id: 'v8-engine',
@@ -434,6 +453,10 @@ This is why consistent types matter. V8 rewards predictable code.`,
     diagramKey: 'v8',
     sceneKey: 'v8',
     seoDescription: 'How V8 JavaScript engine works: Ignition interpreter, TurboFan JIT compiler, hidden classes, inline caches, deoptimization, and garbage collection.',
+    pitfalls: [
+      'Object shape stability matters. Adding properties in different orders creates new hidden classes and forces inline caches to go megamorphic — same code, slower execution.',
+      'Deoptimization is one-way for the current invocation. A function that gets deopted has to be reoptimized later; that warm-up cost is real.',
+    ],
   },
   {
     id: 'event-loop',
@@ -468,6 +491,10 @@ The loop runs like this, forever:
     diagramKey: 'evloop',
     sceneKey: 'eventLoop',
     seoDescription: 'How the JavaScript event loop works: call stack, microtask and macro task queues, VSync, frame budget, jank, and why long tasks block rendering.',
+    pitfalls: [
+      'Microtasks (Promise.then, queueMicrotask) drain to exhaustion between every task — a microtask that schedules another microtask blocks rendering indefinitely.',
+      'setTimeout(fn, 0) is not synchronous-fast — it\'s queued as a macrotask after the current rendering opportunity. Use queueMicrotask if you need it sooner.',
+    ],
   },
   {
     id: 'frame-budget',
@@ -503,6 +530,10 @@ A task comfortable at 60Hz can cause jank on a 120Hz screen.`,
     diagramKey: 'frame',
     sceneKey: 'frameBudget',
     seoDescription: 'How browser frame budgets work: VSync, requestAnimationFrame, the 16ms and 10ms targets, Long Tasks, jank perception, and scheduler.yield().',
+    pitfalls: [
+      'At 120 Hz the budget is 8.33 ms per frame, not 16.67. High-refresh displays cut your window in half on the same hardware.',
+      'Garbage collection and system jitter eat into the budget unpredictably. Aim for ~10 ms recurring work on 60 Hz to keep headroom.',
+    ],
   },
   {
     id: 'http-caching',
@@ -782,6 +813,10 @@ When DevTools profiling shows long "Recalculate Style" slices, three knobs help.
     sceneKey: 'style-recalculation-scene',
     seoDescription: 'How style recalculation works: cascade resolution, inheritance, ComputedStyle output, bloom filters, selector complexity, and the cost of dirty subtrees.',
     outputs: { label: 'output', type: 'ComputedStyle' },
+    pitfalls: [
+      'Deeply nested combinators (.a .b .c .d) defeat the engine\'s bloom-filter fast-rejection. Flat classes match in near-O(1).',
+      'Toggling a class on <body> invalidates every descendant — the entire DOM. Scope class changes to the smallest subtree that needs them.',
+    ],
     step: 3,
     globalOrder: 14,
     hook: 'After the DOM and CSSOM are built, the engine resolves which rules apply to which node and computes the final values. The output feeds layout directly.',
@@ -882,6 +917,9 @@ Containment is not free elsewhere. An inherently expensive component is still ex
     diagramKey: 'containment-diagram',
     sceneKey: 'containment-scene',
     seoDescription: 'How CSS containment works: contain layout, paint, style, size, strict, plus content-visibility, and how each caps the blast radius of a change.',
+    pitfalls: [
+      'Containment only helps if the engine respects it. contain: layout requires a containing block and a defined size. Verify in Layout profiling — don\'t trust the declaration alone.',
+    ],
     step: 4,
     globalOrder: 18,
     hook: 'Tell the browser the inside of this element cannot affect the outside, and the layout engine will stop propagating changes at its edge.',
@@ -930,6 +968,9 @@ Text is the most expensive single op kind in practice. Shaping, hinting, sub-pix
     sceneKey: 'display-lists-scene',
     seoDescription: 'How paint records draw commands into a display list: cc::DisplayItemList, painter ordering, and why the display list is a recipe — not pixels yet.',
     outputs: { label: 'output', type: 'cc::DisplayItemList' },
+    pitfalls: [
+      'Heavy effects (shadows, blurs, masks) add more display items AND more raster cost. Optimize paint commands before chasing JavaScript.',
+    ],
     step: 5,
     globalOrder: 19,
     hook: 'Paint produces a flat, ordered list of draw commands — not pixels. That list is what the rasteriser will execute next.',
@@ -962,6 +1003,9 @@ DevTools Elements panel → Layers (and the 3D view in Rendering) is the fastest
     diagramKey: 'stacking-contexts-diagram',
     sceneKey: 'stacking-contexts-scene',
     seoDescription: 'How CSS stacking contexts work: what creates them, z-index isolation, why overlays sometimes refuse to sit on top, and how the compositor uses contexts.',
+    pitfalls: [
+      'Opacity < 1, transform, filter, and z-index on flex/grid children all silently create a stacking context. A child\'s z-index: 9999 cannot escape its parent\'s context — a common debugging trap.',
+    ],
     step: 5,
     globalOrder: 20,
     hook: 'A stacking context is its own z-axis universe. z-index inside it cannot escape — which is why your overlay sometimes refuses to sit on top.',
@@ -1030,6 +1074,10 @@ The discipline is symmetrical to the trick: promote when you have an animation t
     sceneKey: 'layer-promotion-scene',
     seoDescription: 'How browsers promote elements into composited layers: will-change, transform hacks, implicit promotion, GPU texture cost, and Composite After Paint.',
     outputs: { label: 'output', type: 'cc::Layer' },
+    pitfalls: [
+      'Each promoted layer costs GPU texture memory (w × h × 4 bytes) and commit coordination. * { transform: translateZ(0) } and * { will-change: transform } are the canonical layer explosions.',
+      'Remove will-change after the animation ends. Otherwise every promoted node stays in GPU memory permanently.',
+    ],
     step: 6,
     globalOrder: 23,
     hook: 'Promotion moves paint output into its own GPU surface. Cheap during an animation; expensive if you forget to clean up after.',
