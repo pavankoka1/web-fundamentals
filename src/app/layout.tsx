@@ -8,6 +8,7 @@ import { MouseEye } from '@/components/MouseEye'
 import { BackgroundFX } from '@/components/layout/BackgroundFX'
 import { ProgressHairline } from '@/components/layout/ProgressHairline'
 import { StepRail } from '@/components/layout/StepRail'
+import { SectionRail } from '@/components/layout/SectionRail'
 import { PageTransition } from '@/components/layout/PageTransition'
 import './globals.css'
 
@@ -42,6 +43,8 @@ export const metadata: Metadata = {
     follow: true,
     googleBot: { index: true, follow: true, 'max-image-preview': 'large' },
   },
+  category: 'technology',
+  verification: {},
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -54,6 +57,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <MouseEye />
         <ProgressHairline />
         <StepRail />
+        <SectionRail />
         <PageTransition>{children}</PageTransition>
       </body>
     </html>
