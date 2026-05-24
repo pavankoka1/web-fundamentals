@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     default: 'Web Fundamentals — Under the Hood',
     template: '%s | Web Fundamentals',
   },
-  description: 'Web Fundamentals: how the web actually works, under the hood. 16 concepts from URL to the final pixel on screen — DNS, TCP, TLS, HTTP, rendering, and more. Interactive animations, plain English.',
+  description: 'Web Fundamentals: how the web actually works, under the hood. 30 concepts across the journey from URL to the final pixel on screen — DNS, TCP, TLS, HTTP, rendering, and more. Interactive animations, plain English.',
   keywords: ['how the web works', 'browser internals', 'DNS', 'TCP', 'TLS', 'HTTP', 'V8', 'event loop', 'rendering pipeline', 'web performance'],
   authors: [{ name: 'Web Fundamentals' }],
   openGraph: {
