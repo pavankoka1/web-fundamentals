@@ -37,7 +37,7 @@ export const topics: Topic[] = [
 
 The browser splits this into pieces — before anything goes to the network:
 
-• https — the protocol (how to talk). Browsers have a built-in list of ~130,000 sites that must always use HTTPS, even if you typed http://. GitHub is on that list.
+• https — the protocol (how to talk). Browsers have a built-in list of 180,000+ sites (2024) that must always use HTTPS, even if you typed http://. GitHub is on that list.
 • api.github.com — the address. This is what gets looked up in DNS next.
 • /users/torvalds?tab=repos — the path and query, sent as-is to GitHub's server.
 • #about — this part never leaves your browser. The server never sees it. It just tells the browser to scroll to a section called "about".
@@ -45,7 +45,7 @@ The browser splits this into pieces — before anything goes to the network:
 The split happens in milliseconds, entirely in memory. No network yet.`,
     facts: [
       ['The #fragment rule', 'The part after # is stripped before any request. Servers never see it — that\'s why single-page apps can use #/routes without a server-side routing change.'],
-      ['HSTS preload list', '~130,000 domains baked into every Chrome and Firefox binary. Upgrading http→https happens before DNS, no network needed.'],
+      ['HSTS preload list', '180,000+ domains in Chrome\'s hardcoded list (2024). Upgrading http→https happens before DNS, no network needed.'],
       ['Punycode encoding', 'Non-ASCII domains like münchen.de get encoded to xn--mnchen-3ya.de so old DNS servers can handle them.'],
       ['Default ports', 'http:// implies port 80, https:// implies 443. Browsers omit them from the request unless you specify a different one.'],
       ['URL state machine', 'The WHATWG URL parser has 80+ states — intentionally lenient to match real-world messy URLs browsers encounter in the wild.'],
@@ -137,7 +137,7 @@ HTTP/3 (the latest version) eliminates this entirely by using QUIC underneath.`,
 TLS 1.3 completes this in 1 round trip. TLS 1.2 needed 2.
 Every request from here is encrypted. Nobody watching the wire can read it.`,
     facts: [
-      ['Certificate chain of trust', 'Your browser ships with ~150 trusted root Certificate Authorities. GitHub\'s certificate is signed by one of them — that\'s how you verify it\'s real without knowing GitHub\'s key in advance.'],
+      ['Certificate chain of trust', '~140 trusted root CAs ship in Mozilla\'s CA program (Firefox baseline); Chrome and Apple ship overlapping but different sets. GitHub\'s certificate is signed by one of them — that\'s how you verify it\'s real without knowing GitHub\'s key in advance.'],
       ['Diffie-Hellman key exchange', 'Both sides independently compute the same session key from public information. The key is never transmitted — only values that let each side derive it. Mathematical magic that makes HTTPS possible.'],
       ['TLS 1.3 improvements', 'TLS 1.3 eliminated weak cipher suites, cut the handshake from 2 round trips to 1, and made forward secrecy mandatory. Old TLS 1.2 handshakes add ~100ms compared to 1.3.'],
       ['0-RTT resumption', 'Returning visitors can send application data alongside the TLS handshake — zero extra round trips. Slight replay attack risk: servers must treat 0-RTT data as potentially replayed.'],
