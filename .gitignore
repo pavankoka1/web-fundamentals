@@ -1,0 +1,28 @@
+# Build artifacts
+.next/
+out/
+dist/
+build/
+
+# TypeScript incremental
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+
+# Dependencies
+node_modules/
+
+# Local working state
+.superpowers/
+.DS_Store
+*.log
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Env
+.env
+.env.local
+.env.*.local
