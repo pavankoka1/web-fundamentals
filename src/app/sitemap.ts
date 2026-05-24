@@ -8,6 +8,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date()
   const urls: MetadataRoute.Sitemap = [
     { url: BASE, lastModified: now, changeFrequency: 'monthly', priority: 1 },
+    { url: `${BASE}/glossary`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
   ]
   for (const s of STEPS) {
     urls.push({
