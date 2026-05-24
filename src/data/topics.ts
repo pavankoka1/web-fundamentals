@@ -1264,8 +1264,10 @@ export function getTopicsByPhase(phase: Phase): Topic[] {
 }
 
 export function getAdjacentTopics(slug: string): { prev: Topic | null; next: Topic | null } {
-  // Navigate by globalOrder across the 28-concept tutorial sequence, so prev/next
+  // Navigate by globalOrder across the 30-concept tutorial sequence, so prev/next
   // flow through steps in the correct order regardless of insertion order in topics[].
+  // Every shipped concept is in TOPIC_STEP_MAP — unknown slugs fail fast instead of
+  // walking the raw topics[] array.
   const ordered = topics
     .filter(t => TOPIC_STEP_MAP[t.id])
     .sort(
@@ -1275,12 +1277,7 @@ export function getAdjacentTopics(slug: string): { prev: Topic | null; next: Top
     )
   const idx = ordered.findIndex(t => t.id === slug)
   if (idx === -1) {
-    // Fallback to legacy array-order behaviour for slugs not in the new map
-    const lidx = topics.findIndex(t => t.id === slug)
-    return {
-      prev: lidx > 0 ? topics[lidx - 1] : null,
-      next: lidx >= 0 && lidx < topics.length - 1 ? topics[lidx + 1] : null,
-    }
+    return { prev: null, next: null }
   }
   return {
     prev: idx > 0 ? ordered[idx - 1] : null,
