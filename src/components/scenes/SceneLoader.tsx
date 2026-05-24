@@ -35,12 +35,11 @@ const customScenes: Record<string, LazyExoticComponent<ComponentType>> = {
   'layer-promotion-placeholder':               lazy(() => import('./LayerPromotionScene')),
   'commit-and-compositor-thread-placeholder':  lazy(() => import('./CommitAndCompositorThreadScene')),
   'tiling-rasterization-placeholder':          lazy(() => import('./TilingRasterizationScene')),
+  'vsync-display-placeholder':                 lazy(() => import('./VSyncDisplayScene')),
 }
 
 // Phase E new concepts — all currently route to PlaceholderScene.
-const placeholderSceneKeys = new Set<string>([
-  'vsync-display-placeholder',
-])
+const placeholderSceneKeys = new Set<string>([])
 
 interface SceneLoaderProps {
   sceneKey: string
