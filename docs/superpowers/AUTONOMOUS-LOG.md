@@ -289,3 +289,53 @@ User feedback addressed (4/4):
 
 Tagged: v2.2.0-polish (in progress)
 
+
+## Third feedback round — depth polish (2026-05-24)
+
+6 user items: favicon+SEO+indexing, BackgroundFX v2 (out of box), right side progress + sections, best-of animations, scrollbar hide, sections on right rail.
+
+8 commits via 4 parallel subagents.
+
+**SEO + favicon** (dbe149a, b6d38d9, f49d4d9, bcfe689)
+- src/app/icon.svg — K monogram favicon (Next 15 auto-picks)
+- src/app/apple-icon.tsx — 180x180 ImageResponse Apple touch icon
+- src/app/opengraph-image.tsx — 1200x630 default OG card
+- generateMetadata on /steps/[step]/page.tsx and /steps/[step]/[concept]/page.tsx
+- Per-concept canonical, og:image, twitter:summary_large_image, keywords, siteName
+- JSON-LD TechArticle structured data on every concept page
+- src/app/sitemap.ts rewritten to enumerate 36 routes (1 home + 7 steps + 28 concepts)
+
+**BackgroundFX v2** (f2dae05)
+- Three layers in one canvas:
+  - Flow field: 90 particles advected by inertia-blended pseudo-noise. Trails curve organically.
+  - Pulse network: ~20 jittered nodes, dotted edges between nearby pairs, periodic packets traveling along edges with arrival glow + expanding ring.
+  - Cursor halo: subtle radial wash + gravitational pull on nearby particles.
+- Page Visibility pause, ResizeObserver, prefers-reduced-motion static fallback.
+- O(N) per frame — no N² particle-pair work.
+
+**SectionRail** (a986786)
+- src/components/layout/SectionRail.tsx — new right-side rail (180px, lg-only, vertically centered).
+- Two concentric SVG progress arcs (72px): outer = current-step progress, inner = full-tutorial progress. Animated strokeDashoffset transitions.
+- "STEP X% · ALL Y%" caption.
+- "IN THIS STEP" list with current step's concepts. Active concept has 2s pulse loop on its dot.
+- Home shows "THE 7 STEPS" overview list instead.
+- AnimatePresence on the list keyed by step slug for crossfade when navigating between steps.
+
+**Scrollbar hide + motion polish** (1cf41ba, ab6d88d)
+- Hidden native scrollbar via scrollbar-width: none + ::-webkit-scrollbar { display: none }.
+- .thin-scroll utility class for opt-in code-block scrollbars.
+- PageTransition: scale 0.995 → 1 → 1.005 added, duration 240ms → 320ms.
+- TopicHero title: animated letterSpacing -0.04em → -0.018em over 700ms (settle effect).
+- ConceptCard whileTap: scale 0.98 (tactile feedback).
+- motion.ts: new ease.slow + fadeSlideUp variant.
+
+User feedback addressed (6/6):
+1. ✓ Favicon, SEO, per-page indexing — every page has canonical, OG, Twitter card, JSON-LD
+2. ✓ BackgroundFX redesigned with flow field + pulse network — "alive" and unique
+3. ✓ Right rail with two progress rings (section + journey) + concepts list
+4. ✓ Motion polished throughout — longer transitions, letterSpacing settle, scale on cards
+5. ✓ Scrollbar hidden
+6. ✓ Concepts in step shown on right rail (matches left rail for steps)
+
+Tagged: v2.3.0-depth (in progress)
+
