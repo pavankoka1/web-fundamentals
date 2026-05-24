@@ -83,7 +83,7 @@ export default function CodeDemo({ bad, good, label }: Props) {
             {isBad ? 'approach.ts — avoid this' : 'approach.ts — prefer this'}
           </span>
         </div>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto thin-scroll">
           <pre
             className="p-6 m-0 font-mono text-[13px] leading-[1.7] text-[color:var(--color-text-primary)]"
             style={{ tabSize: 2, whiteSpace: 'pre' }}

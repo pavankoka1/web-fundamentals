@@ -76,11 +76,15 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--color-bg); }
-::-webkit-scrollbar-thumb { background: var(--color-border-bright); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
+/* Hide scrollbar visually, keep scroll functionality */
+html { scrollbar-width: none; -ms-overflow-style: none; }
+html::-webkit-scrollbar { width: 0; height: 0; display: none; }
+body::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
+/* Custom thin scrollbar for code blocks / horizontal scroll areas that NEED a scrollbar */
+.thin-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
+.thin-scroll::-webkit-scrollbar-thumb { background: rgba(125, 211, 252, 0.2); border-radius: 2px; }
+.thin-scroll::-webkit-scrollbar-thumb:hover { background: rgba(125, 211, 252, 0.4); }
 
 /* Code blocks */
 pre, code {
