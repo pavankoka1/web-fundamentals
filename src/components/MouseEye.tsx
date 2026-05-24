@@ -20,6 +20,34 @@ export function MouseEye() {
     const W = 32, H = 32, CX = 16, CY = 16, R = 13
     let rot = 0, rId = 0
 
+    // Honour the OS-level reduced-motion preference: render a single static
+    // iris + neutral pose and skip the mousemove listener + rAF loop entirely.
+    const prefersReduced =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (prefersReduced) {
+      // One-shot static render of the iris.
+      ctx.clearRect(0, 0, W, H)
+      const g = ctx.createRadialGradient(CX, CY, 0, CX, CY, R)
+      g.addColorStop(0, '#e6f6ff')
+      g.addColorStop(0.18, '#7DD3FC')
+      g.addColorStop(0.45, '#3b8fb8')
+      g.addColorStop(0.75, '#0f3045')
+      g.addColorStop(1, '#040b14')
+      ctx.beginPath(); ctx.arc(CX, CY, R, 0, Math.PI * 2)
+      ctx.fillStyle = g; ctx.fill()
+
+      // Static pupil + sclera ring.
+      ovx.clearRect(0, 0, W, H)
+      ovx.beginPath(); ovx.arc(CX, CY, 5.5, 0, Math.PI * 2)
+      ovx.fillStyle = '#000'; ovx.fill()
+      ovx.beginPath(); ovx.arc(CX - 2, CY - 2, 1.8, 0, Math.PI * 2)
+      ovx.fillStyle = 'rgba(255,255,255,0.88)'; ovx.fill()
+      ovx.beginPath(); ovx.arc(CX, CY, R, 0, Math.PI * 2)
+      ovx.strokeStyle = 'rgba(125,211,252,0.25)'; ovx.lineWidth = 0.5; ovx.stroke()
+      return
+    }
+
     const drawIris = () => {
       ctx.clearRect(0, 0, W, H)
       const g = ctx.createRadialGradient(CX, CY, 0, CX, CY, R)
@@ -92,7 +120,7 @@ export function MouseEye() {
     rId = requestAnimationFrame(drawOverlay)
 
     const onMove = (e: MouseEvent) => { mouse.current = { x: e.clientX/window.innerWidth, y: e.clientY/window.innerHeight } }
-    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mousemove', onMove, { passive: true })
     return () => { clearInterval(irisTimer); cancelAnimationFrame(rId); window.removeEventListener('mousemove', onMove) }
   }, [])
 
