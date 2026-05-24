@@ -13,6 +13,8 @@ export interface Topic {
   sceneKey: string
   seoDescription: string
   codeDemo?: { bad: string; good: string; label: string }
+  outputs?: { label: string; type: string }
+  pitfalls?: string[]
   step?: number
   globalOrder?: number
   arrow?: string

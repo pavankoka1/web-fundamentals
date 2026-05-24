@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Topic, TOPIC_STEP_MAP } from "@/data/topics";
 import { stepByNumber } from "@/lib/steps";
 import { StepBadge } from "@/components/atoms/StepBadge";
+import { OutputBadge } from "@/components/atoms/OutputBadge";
 import { stagger, fadeUp, ease } from "@/lib/motion";
 
 export default function TopicHero({ topic }: { topic: Topic }) {
@@ -11,6 +12,11 @@ export default function TopicHero({ topic }: { topic: Topic }) {
 
   return (
     <motion.header initial="hidden" animate="visible" variants={stagger(0.08)}>
+      {topic.outputs && (
+        <motion.div variants={fadeUp} className="mb-3">
+          <OutputBadge label={topic.outputs.label} type={topic.outputs.type} />
+        </motion.div>
+      )}
       <motion.div variants={fadeUp}>
         {step && (
           <StepBadge
