@@ -8,7 +8,7 @@ import { PipelineOverview } from "./PipelineOverview";
 
 export function JourneyOverview() {
   return (
-    <main className="mx-auto max-w-[840px] px-8 pt-32 pb-24 lg:pl-24">
+    <main className="relative z-10 mx-auto max-w-[840px] px-8 pt-32 pb-24 lg:pl-24">
       <motion.div initial="hidden" animate="visible" variants={stagger(0.08)}>
         <motion.div variants={fadeUp} style={{ fontSize: 'var(--type-eyebrow)' }} className="font-mono uppercase tracking-[0.22em] text-[color:var(--color-text-muted)]">
           web-internals · tutorial

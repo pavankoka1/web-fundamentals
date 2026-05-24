@@ -61,7 +61,7 @@ export default async function Page({ params }: Props) {
   const { prev, next } = getAdjacentTopics(topic.id)
 
   return (
-    <main className="mx-auto max-w-[840px] px-8 pt-32 pb-24 lg:pl-24">
+    <main className="relative z-10 mx-auto max-w-[840px] px-8 pt-32 pb-24 lg:pl-24">
       <ProgressTracker topicId={topic.id} />
 
       {/* WebGL Scene */}

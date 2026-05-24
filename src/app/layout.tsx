@@ -5,6 +5,7 @@ import { Source_Serif_4 } from 'next/font/google'
 import { KokaMark } from '@/components/brand/KokaMark'
 import { HomeMark } from '@/components/brand/HomeMark'
 import { MouseEye } from '@/components/MouseEye'
+import { BackgroundFX } from '@/components/layout/BackgroundFX'
 import { ProgressHairline } from '@/components/layout/ProgressHairline'
 import { StepRail } from '@/components/layout/StepRail'
 import { PageTransition } from '@/components/layout/PageTransition'
@@ -47,6 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable} ${sourceSerif.variable}`}>
       <body>
+        <BackgroundFX />
         <KokaMark />
         <HomeMark />
         <MouseEye />
