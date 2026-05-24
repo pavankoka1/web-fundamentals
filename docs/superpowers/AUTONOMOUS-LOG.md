@@ -339,3 +339,57 @@ User feedback addressed (6/6):
 
 Tagged: v2.3.0-depth (in progress)
 
+
+## Wrap-up round — external review actions (2026-05-24 late)
+
+External review surfaced real gaps. 16 commits via 2 parallel agents to close them out. User explicitly: keep event-loop (heart of JS engine), preserve sibling-site spec, wrap this up.
+
+**Topics + data surgery** (agent A — 9 commits)
+- b89dd52 — restore v8-engine + event-loop to Step 2 (28 → 30 concepts, all globalOrders renumbered)
+- a81563b — remove dead Execute phase from Phase union + phaseColors + PhaseGrid icon
+- dbfb972 — add Topic.outputs field + backfill render-pipeline Chromium types (cc::DisplayItemList, cc::Layer, cc::PropertyTree, ComputedStyle, fragment tree, etc.)
+- 03ca892 — add Topic.pitfalls field + backfill 1-3 pitfalls per concept (12 concepts populated)
+- 82bda25 — Layout Thrashing codeDemo on layout topic (canonical read-after-write trap)
+- 0cb59b1 — lead compositing insight with compositor-only golden rule
+- 085d171 — refresh HSTS preload (180,000+ in 2024) and CA-count (~140) facts with year tags
+- 0c83703 — metadata.description 16 → 30 concepts
+- 7e57024 — getAdjacentTopics returns null instead of legacy array walk
+
+**Components, routes, perf, docs** (agent B — 8 commits)
+- e28b83a — .gitignore (was missing)
+- 452fb28 — OutputBadge component (mounts above StepBadge eyebrow)
+- b30edcf — PitfallCallout component ("Watch for" section, renders when pitfalls present)
+- d134d5e — MouseEye: passive mousemove + prefers-reduced-motion bailout
+- 3b3f465 — /glossary route (alphabetical index of all 30 concepts, in sitemap)
+- 0f209fb — Chromium/Blink terminology disclaimer on home
+- 30cb747 — sibling-site spec enriched: VDOM, named invalidation mechanisms, layer dynamics, compositing-failed three modes, chatty mousemove, DevTools literacy meta-section, Confluence Glossary alignment, 5-phase render-loop navigation lens
+
+**Coordination notes:**
+- Agent B added the Topic.outputs / pitfalls interface fields defensively; Agent A then populated the data. No conflict.
+- Agent B's sceneKey rename (drop `-placeholder` suffix on 13 keys) landed via Agent A's Execute-phase commit due to overlap; substance is correct, only commit message narrative was lost.
+- inline `step` and `globalOrder` fields on new Topic entries are stale relative to TOPIC_STEP_MAP but TOPIC_STEP_MAP is the source of truth — left as-is.
+
+User feedback addressed (review items / 16):
+- ✓ Metadata says 30 (was 16)
+- ✓ .gitignore added
+- ✓ v8-engine + event-loop restored as proper Step 2 concepts (user explicit ask)
+- ✓ Execute phase deleted
+- ✓ -placeholder sceneKey suffix dropped
+- ✓ MouseEye passive + reduced-motion
+- ✓ HSTS / CA facts year-tagged
+- ✓ Topic.outputs (Chromium types as small badges)
+- ✓ Topic.pitfalls (1-3 anti-patterns per concept, structured callout)
+- ✓ Layout Thrashing codeDemo
+- ✓ Compositor golden rule headlining
+- ✓ /glossary alphabetical reference route
+- ✓ Chromium/Blink disclaimer
+- ✓ getAdjacentTopics fail-fast (no more legacy walk)
+- ✓ Sibling-site spec comprehensive (VDOM, invalidation, layer dynamics, compositing-failed, DevTools literacy, render-loop lens)
+
+Verification:
+- npm run build → 47 routes (1 home + 1 glossary + 7 step landings + 30 concepts + sitemap/robots/icons)
+- npx tsc --noEmit → 115 baseline errors (no new)
+- 30 concept pages confirmed
+
+Tagged: v3.0.0-ship (in progress)
+
