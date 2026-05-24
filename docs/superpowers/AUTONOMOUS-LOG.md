@@ -247,3 +247,45 @@ User feedback addressed (7/7):
 
 Tagged: v2.1.0-feedback (in progress)
 
+
+## Second feedback round (2026-05-24)
+
+User feedback: HomeMark too blunt, DOM/CSSOM coverage check, real animations for all 13 placeholder pages, creative elegant background animation.
+
+16 commits in this round via 4 parallel subagents.
+
+**HomeMark + BackgroundFX** (commits 958b989, 5186638)
+- HomeMark redesigned as a refined K monogram inside a thin ice-cyan circle, with a dashed ring that rotates slowly on hover. No literal "HOME" label, no house icon. Title attribute for accessibility.
+- BackgroundFX: global ambient canvas mounted as first body child. 60 ice-cyan particles drifting, occasional constellation lines when particles come within 140px, slow vertical sweep every 20s, reactive to scroll velocity (particles speed up briefly), Page Visibility API pause, reduced-motion fallback (static dotted grid).
+- All <main> elements got `relative z-10` so content sits above the background.
+
+**DOM/CSSOM content enrichment** (commit 809b65f)
+- Audited html-parsing and css-parsing: both covered the PROCESS thoroughly but treated the resulting trees only as outcomes.
+- Rewrote tail of html-parsing body to describe DOM as typed JS objects with parent/child/sibling pointers, ancestry queries, DocumentFragment, Shadow DOM. Added 3 new facts. Rewrote insight.
+- Rewrote css-parsing body to show CSSOM hierarchy (CSSStyleSheet → CSSRuleList → CSSStyleRule), mutability via insertRule, queryability via document.styleSheets, getComputedStyle as a flush boundary. Added 3 new facts. Rewrote insight to frame DOM + CSSOM as sibling trees joined at style recalculation.
+
+**13 real bespoke scenes** (commits 50b2444 cf81152 2582a13 53015e0 ccd2038 6461583 b8355de cecec32 25db9d6 4aa6ccf 19c375e 05297e7 b58076c)
+- ResourceHintsScene — 3 lanes (no hint / preload / preconnect) waterfall showing how hints shift start time
+- ResourceLoadingPrioritiesScene — 5 priority lanes with weighted packet drops + conveyor
+- ScriptsDuringParsingScene — HTML parser cursor with sync script pause + defer end-of-doc fire
+- StyleRecalculationScene — dirty bit propagating through DOM tree, status caption cycles
+- LayoutTreeConstructionScene — DOM tree filters to layout tree, display:none nodes ghost out
+- ContainmentScene — side-by-side panels: no-contain (everything jitters) vs contain: layout (only child changes)
+- DisplayListsScene — paint ops appending with newest-row flash + flush sweep
+- StackingContextsScene — child trapped at parent's stacking boundary, bounces back
+- PropertyTreesScene — root fanning to Transform/Clip/Effect/Opacity/Scroll branches with leaves
+- LayerPromotionScene — isometric tile lifts off plane onto own layer, demotes back
+- CommitAndCompositorThreadScene — main → commit beam → compositor → display cycle
+- TilingRasterizationScene — 8×4 tile grid fills with raster cursor, scroll triggers re-raster
+- VSyncDisplayScene — 60 deterministic heartbeat bars + VSYNC beam sweep + budget meter
+
+All 13 scenes: Canvas 2D, ice-cyan palette only, DPR-aware, IntersectionObserver pause, prefers-reduced-motion static fallback. SceneLoader.placeholderSceneKeys is now empty.
+
+User feedback addressed (4/4):
+1. ✓ HomeMark redesigned as creative K monogram glyph
+2. ✓ DOM/CSSOM coverage enriched in html-parsing and css-parsing
+3. ✓ All 13 placeholder concepts now have real, themed scenes
+4. ✓ BackgroundFX global ambient animation on every page
+
+Tagged: v2.2.0-polish (in progress)
+
