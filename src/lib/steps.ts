@@ -22,7 +22,7 @@ export const STEPS: StepMeta[] = [
     title: "Parsing",
     arrow: "bytes → document",
     lede: "Bytes become a DOM, CSS becomes a CSSOM, and any script the parser hits runs immediately — that's where V8 first enters the journey.",
-    conceptCount: 3,
+    conceptCount: 5,
   },
   {
     step: 3,

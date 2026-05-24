@@ -1225,31 +1225,33 @@ export const TOPIC_STEP_MAP: Record<string, { step: number; order: number; globa
   "cdn-edge":                     { step: 1, order: 8,  globalOrder: 8  },
   "resource-hints":               { step: 1, order: 9,  globalOrder: 9  },
   "resource-loading-priorities":  { step: 1, order: 10, globalOrder: 10 },
-  // Step 2 — Parsing (3 total). v8-engine + event-loop fold into scripts-during-parsing
-  // and are removed from the map so they no longer generate step listings or pages.
+  // Step 2 — Parsing (5 total). Scripts run during parsing, so V8 and the event loop
+  // belong here — they are the heart of JS execution and earn their own concept pages.
   "html-parsing":                 { step: 2, order: 1,  globalOrder: 11 },
   "css-parsing":                  { step: 2, order: 2,  globalOrder: 12 },
   "scripts-during-parsing":       { step: 2, order: 3,  globalOrder: 13 },
+  "v8-engine":                    { step: 2, order: 4,  globalOrder: 14 },
+  "event-loop":                   { step: 2, order: 5,  globalOrder: 15 },
   // Step 3 — Style & tree construction (3 total)
-  "style-recalculation":          { step: 3, order: 1,  globalOrder: 14 },
-  "render-tree":                  { step: 3, order: 2,  globalOrder: 15 },
-  "layout-tree-construction":     { step: 3, order: 3,  globalOrder: 16 },
+  "style-recalculation":          { step: 3, order: 1,  globalOrder: 16 },
+  "render-tree":                  { step: 3, order: 2,  globalOrder: 17 },
+  "layout-tree-construction":     { step: 3, order: 3,  globalOrder: 18 },
   // Step 4 — Layout (2 total)
-  "layout":                       { step: 4, order: 1,  globalOrder: 17 },
-  "containment":                  { step: 4, order: 2,  globalOrder: 18 },
+  "layout":                       { step: 4, order: 1,  globalOrder: 19 },
+  "containment":                  { step: 4, order: 2,  globalOrder: 20 },
   // Step 5 — Paint (4 total)
-  "display-lists":                { step: 5, order: 1,  globalOrder: 19 },
-  "stacking-contexts":            { step: 5, order: 2,  globalOrder: 20 },
-  "property-trees":               { step: 5, order: 3,  globalOrder: 21 },
-  "paint":                        { step: 5, order: 4,  globalOrder: 22 },
+  "display-lists":                { step: 5, order: 1,  globalOrder: 21 },
+  "stacking-contexts":            { step: 5, order: 2,  globalOrder: 22 },
+  "property-trees":               { step: 5, order: 3,  globalOrder: 23 },
+  "paint":                        { step: 5, order: 4,  globalOrder: 24 },
   // Step 6 — Compositing (4 total)
-  "layer-promotion":              { step: 6, order: 1,  globalOrder: 23 },
-  "commit-and-compositor-thread": { step: 6, order: 2,  globalOrder: 24 },
-  "tiling-rasterization":         { step: 6, order: 3,  globalOrder: 25 },
-  "compositing":                  { step: 6, order: 4,  globalOrder: 26 },
+  "layer-promotion":              { step: 6, order: 1,  globalOrder: 25 },
+  "commit-and-compositor-thread": { step: 6, order: 2,  globalOrder: 26 },
+  "tiling-rasterization":         { step: 6, order: 3,  globalOrder: 27 },
+  "compositing":                  { step: 6, order: 4,  globalOrder: 28 },
   // Step 7 — Display (2 total)
-  "vsync-display":                { step: 7, order: 1,  globalOrder: 27 },
-  "frame-budget":                 { step: 7, order: 2,  globalOrder: 28 },
+  "vsync-display":                { step: 7, order: 1,  globalOrder: 29 },
+  "frame-budget":                 { step: 7, order: 2,  globalOrder: 30 },
 };
 
 export const TOPIC_SOURCES: Record<string, "original" | "hbr" | "wf"> = {
@@ -1268,6 +1270,8 @@ export const TOPIC_SOURCES: Record<string, "original" | "hbr" | "wf"> = {
   "html-parsing": "original",
   "css-parsing": "original",
   "scripts-during-parsing": "hbr",
+  "v8-engine": "original",
+  "event-loop": "original",
   // Step 3
   "style-recalculation": "hbr",
   "render-tree": "original",
