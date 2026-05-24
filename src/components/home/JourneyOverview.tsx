@@ -28,6 +28,13 @@ export function JourneyOverview() {
           The browser&apos;s journey, beginning when you press Enter and ending when pixels appear on the screen. Each step builds on the last — start anywhere, but the story works best in order.
         </motion.p>
 
+        <motion.p
+          variants={fadeUp}
+          className="mt-4 max-w-[58ch] font-mono text-[10px] uppercase tracking-[0.18em] text-[color:var(--color-text-muted)]"
+        >
+          Uses Chromium / Blink terminology. WebKit and Gecko pipelines are similar but not identical.
+        </motion.p>
+
         <motion.div variants={fadeUp} className="mt-6">
           <Link
             href="/glossary"
