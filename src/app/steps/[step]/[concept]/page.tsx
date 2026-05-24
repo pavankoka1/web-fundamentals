@@ -53,8 +53,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: 'article',
       siteName: 'Web Fundamentals',
       authors: ['Web Fundamentals'],
+      images: ['/opengraph-image'],
     },
-    twitter: { card: 'summary_large_image', title, description },
+    twitter: { card: 'summary_large_image', title, description, images: ['/opengraph-image'] },
   }
 }
 

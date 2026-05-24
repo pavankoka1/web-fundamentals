@@ -34,9 +34,11 @@ export const metadata: Metadata = {
     type: 'website',
     siteName: 'Web Fundamentals',
     locale: 'en_US',
+    images: ['/opengraph-image'],
   },
   twitter: {
     card: 'summary_large_image',
+    images: ['/opengraph-image'],
   },
   robots: {
     index: true,
