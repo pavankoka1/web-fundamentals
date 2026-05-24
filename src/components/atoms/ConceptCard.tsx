@@ -15,7 +15,12 @@ export interface ConceptCardProps {
 
 export function ConceptCard({ href, step, index, globalOrder, title, hook, isNew }: ConceptCardProps) {
   return (
-    <motion.div variants={fadeUp} whileHover={{ x: 4 }} transition={{ type: "spring", stiffness: 300, damping: 24 }}>
+    <motion.div
+      variants={fadeUp}
+      whileHover={{ x: 2 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 300, damping: 24 }}
+    >
       <Link
         href={href}
         className="group block rounded-md border border-[color:var(--color-border)] bg-transparent px-6 py-6 transition-all duration-200 hover:border-[color:var(--color-accent-line)] hover:bg-[color:var(--color-accent-soft)] hover:shadow-[0_0_24px_-8px_var(--color-accent-glow)] lg:px-8"

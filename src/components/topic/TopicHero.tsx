@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Topic, TOPIC_STEP_MAP } from "@/data/topics";
 import { stepByNumber } from "@/lib/steps";
 import { StepBadge } from "@/components/atoms/StepBadge";
-import { stagger, fadeUp, heroEntrance } from "@/lib/motion";
+import { stagger, fadeUp, ease } from "@/lib/motion";
 
 export default function TopicHero({ topic }: { topic: Topic }) {
   const stepInfo = TOPIC_STEP_MAP[topic.id];
@@ -20,9 +20,11 @@ export default function TopicHero({ topic }: { topic: Topic }) {
         )}
       </motion.div>
       <motion.h1
-        variants={heroEntrance}
+        initial={{ opacity: 0, y: 12, letterSpacing: "-0.04em" }}
+        animate={{ opacity: 1, y: 0, letterSpacing: "-0.018em" }}
+        transition={{ duration: 0.7, ease: ease.out, delay: 0.1 }}
         style={{ fontSize: 'var(--type-title)' }}
-        className="mt-4 font-[family-name:var(--font-display)] leading-[1.05] tracking-[-0.018em] text-[color:var(--color-text-primary)]"
+        className="mt-4 font-[family-name:var(--font-display)] leading-[1.05] text-[color:var(--color-text-primary)]"
       >
         {topic.title}
       </motion.h1>

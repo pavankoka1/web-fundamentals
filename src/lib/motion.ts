@@ -4,6 +4,7 @@ export const ease = {
   out: [0.16, 1, 0.3, 1] as const,
   inOut: [0.65, 0, 0.35, 1] as const,
   inBack: [0.5, -0.5, 0.5, 1.5] as const,
+  slow: [0.7, 0, 0.3, 1] as const,
 };
 
 export const fadeUp: Variants = {
@@ -20,7 +21,16 @@ export const fadeIn: Variants = {
   visible: { opacity: 1, transition: { duration: 0.4, ease: ease.out } },
 };
 
-export const stagger = (gap = 0.08): Variants => ({
+export const fadeSlideUp: Variants = {
+  hidden: { opacity: 0, y: 18 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.7, ease: ease.out },
+  },
+};
+
+export const stagger = (gap = 0.06): Variants => ({
   hidden: {},
   visible: { transition: { staggerChildren: gap } },
 });
@@ -60,8 +70,8 @@ export const railDotActive: Variants = {
 };
 
 export const pageTransition = {
-  initial: { opacity: 0, y: 12 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -8 },
-  transition: { duration: 0.24, ease: ease.out },
+  initial: { opacity: 0, y: 12, scale: 0.995 },
+  animate: { opacity: 1, y: 0, scale: 1 },
+  exit: { opacity: 0, y: -8, scale: 1.005 },
+  transition: { duration: 0.32, ease: ease.out },
 };
