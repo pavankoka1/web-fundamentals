@@ -12,6 +12,7 @@ import ConceptSection from '@/components/topic/ConceptSection'
 import FactsGrid from '@/components/topic/FactsGrid'
 import InsightCallout from '@/components/topic/InsightCallout'
 import CodeDemo from '@/components/topic/CodeDemo'
+import { PitfallCallout } from '@/components/topic/PitfallCallout'
 import TopicNav from '@/components/topic/TopicNav'
 import SceneLoader from '@/components/scenes/SceneLoader'
 import DiagramLoader from '@/components/diagrams/DiagramLoader'
@@ -106,6 +107,9 @@ export default async function Page({ params }: Props) {
             good={topic.codeDemo.good}
             label={topic.codeDemo.label}
           />
+        )}
+        {topic.pitfalls && topic.pitfalls.length > 0 && (
+          <PitfallCallout pitfalls={topic.pitfalls} />
         )}
         <TopicNav prev={prev} next={next} />
       </article>
