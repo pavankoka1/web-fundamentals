@@ -35,7 +35,6 @@ const customScenes: Record<string, LazyExoticComponent<ComponentType>> = {
 
 // Phase E new concepts — all currently route to PlaceholderScene.
 const placeholderSceneKeys = new Set<string>([
-  'layout-tree-construction-placeholder',
   'containment-placeholder',
   'layer-promotion-placeholder',
   'commit-and-compositor-thread-placeholder',
