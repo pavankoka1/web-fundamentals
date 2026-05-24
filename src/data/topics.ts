@@ -344,6 +344,21 @@ and then bounces back up to resize parents and shift siblings.`,
       'Animating layout-affecting properties (width, top, margin) makes every frame land in this step. Prefer transform and opacity, which stay on the compositor.',
       'Nested flex inside flex inside flex multiplies intrinsic-sizing passes. Flat grids and explicit dimensions cut blast radius.',
     ],
+    codeDemo: {
+      label: 'Layout thrashing (read-after-write)',
+      bad: `// Forces a synchronous layout on every iteration:
+elements.forEach(el => {
+  el.style.width = '100px';      // write
+  const h = el.clientHeight;      // read → forces layout NOW
+  el.style.height = h + 'px';     // another write
+});`,
+      good: `// Batch reads, then batch writes — one layout per frame:
+const heights = elements.map(el => el.clientHeight);
+elements.forEach((el, i) => {
+  el.style.width = '100px';
+  el.style.height = heights[i] + 'px';
+});`,
+    },
   },
   {
     id: 'paint',
