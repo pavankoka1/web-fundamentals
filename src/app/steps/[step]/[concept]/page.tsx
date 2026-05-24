@@ -16,6 +16,7 @@ import TopicNav from '@/components/topic/TopicNav'
 import SceneLoader from '@/components/scenes/SceneLoader'
 import DiagramLoader from '@/components/diagrams/DiagramLoader'
 import ProgressTracker from '@/components/topic/ProgressTracker'
+import { topicJsonLd } from '@/lib/schema'
 
 export function generateStaticParams() {
   return topics
@@ -31,22 +32,29 @@ interface Props {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { concept } = await params
-  const topic = getTopicBySlug(concept)
-  if (!topic) return {}
+  const { step: stepSlug, concept: conceptId } = await params
+  const stepMeta = stepBySlug(stepSlug)
+  const topic = getTopicBySlug(conceptId)
+  if (!stepMeta || !topic) return { title: 'Concept not found' }
+
+  const title = topic.title
+  const description = topic.seoDescription || topic.subtitle || `Concept in ${stepMeta.title}.`
+  const url = `/steps/${stepMeta.slug}/${topic.id}`
+
   return {
-    title: topic.title,
-    description: topic.seoDescription,
+    title,
+    description,
+    keywords: [topic.title, stepMeta.title, 'web internals', 'browser internals'],
+    alternates: { canonical: url },
     openGraph: {
-      title: `${topic.title} — Web Internals`,
-      description: topic.seoDescription,
+      title,
+      description,
+      url,
       type: 'article',
+      siteName: 'Web Fundamentals',
+      authors: ['Web Fundamentals'],
     },
-    twitter: {
-      card: 'summary_large_image',
-      title: `${topic.title} — Web Internals`,
-      description: topic.seoDescription,
-    },
+    twitter: { card: 'summary_large_image', title, description },
   }
 }
 
@@ -60,8 +68,15 @@ export default async function Page({ params }: Props) {
 
   const { prev, next } = getAdjacentTopics(topic.id)
 
+  const jsonLd = topicJsonLd(topic, stepMeta)
+
   return (
     <main className="relative z-10 mx-auto max-w-[840px] px-8 pt-32 pb-24 lg:pl-24">
+      {/* JSON-LD payload is built from typed Topic data; JSON.stringify is safe here. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <ProgressTracker topicId={topic.id} />
 
       {/* WebGL Scene */}

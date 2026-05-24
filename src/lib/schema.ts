@@ -1,24 +1,26 @@
 import type { Topic } from '@/data/topics'
+import type { StepMeta } from '@/lib/steps'
 
 const BASE_URL = 'https://web-internals.dev'
 
-export function topicJsonLd(topic: Topic) {
+export function topicJsonLd(topic: Topic, step?: StepMeta) {
+  const url = step ? `${BASE_URL}/steps/${step.slug}/${topic.id}` : `${BASE_URL}/${topic.id}`
   return {
     '@context': 'https://schema.org',
     '@type': 'TechArticle',
-    headline: `${topic.title} — How the Web Works`,
-    description: topic.seoDescription,
-    articleSection: topic.phase,
+    headline: topic.title,
+    description: topic.seoDescription || topic.subtitle,
+    articleSection: step?.title ?? topic.phase,
     position: topic.order,
-    url: `${BASE_URL}/${topic.id}`,
+    url,
     isPartOf: {
       '@type': 'WebSite',
-      name: 'Web Internals',
+      name: 'Web Fundamentals',
       url: BASE_URL,
     },
     author: {
       '@type': 'Organization',
-      name: 'Web Internals',
+      name: 'Web Fundamentals',
     },
   }
 }
