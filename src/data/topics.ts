@@ -190,7 +190,7 @@ HTTP/2 sends many of these conversations in parallel over one connection.`,
     order: 6,
     title: 'HTML Parsing',
     subtitle: 'Converting raw text into a living tree the browser can work with',
-    example: `The server sends plain text. The parser turns it into a tree of objects:
+    example: `The server sends plain text. The parser turns it into a tree of objects — the Document Object Model:
 
 <html>              → creates the root Document node
   <head>            → child of html
@@ -200,21 +200,26 @@ HTTP/2 sends many of these conversations in parallel over one connection.`,
     <div id="app">  → child of body
       <p>Hello</p>  → child of div
 
-Result: a Document Object Model (DOM) tree.
-JavaScript can walk this tree and mutate it at any time — even mid-parse.
-The parser is deliberately error-tolerant: broken HTML gets silently repaired.`,
+The DOM is not a string. Every tag becomes a Node object with a typed role — Element, Text, Comment, DocumentFragment — and four pointers: parentNode, firstChild, nextSibling, previousSibling. Attributes hang off Element nodes as a NamedNodeMap. Text between tags becomes a separate Text node.
+
+A tree (not a flat list) is what makes ancestry queries cheap. element.closest('.card') walks parent pointers until it matches. document.querySelectorAll('.card p') walks descendants. Both run in time proportional to depth, not document size.
+
+JavaScript can walk and mutate this tree at any time — even mid-parse. The parser is deliberately error-tolerant: broken HTML gets silently repaired into a well-formed tree.`,
     facts: [
+      ['Node, not string', 'Every DOM element is a JavaScript object with parentNode, firstChild, nextSibling, previousSibling pointers, plus an attributes map and a childNodes NodeList. In V8 a typical element costs roughly 200-400 bytes of heap; pages with 10,000 nodes carry a few megabytes of DOM before any data.'],
       ['Render-blocking scripts', 'A <script> tag without async or defer halts HTML parsing completely until the script downloads and executes. One slow third-party script can delay your entire page.'],
       ['async vs defer', 'async: download in parallel with parsing, run immediately when ready (out of order). defer: download in parallel, run after parsing completes, in document order. defer is almost always the right choice.'],
       ['Preload scanner', 'While a render-blocking script stalls the main parser, a lightweight background scanner keeps reading ahead for images, fonts, and stylesheets to start downloading in parallel. This is why preload hints work so well.'],
+      ['DocumentFragment', 'A lightweight off-document subtree. Append children to a fragment, then insert the fragment into the live DOM once — the browser pays for layout and style invalidation a single time instead of once per child. The fragment itself disappears on insert; only its children remain.'],
+      ['Shadow DOM', 'Web components attach a private shadow tree to an element. It is a real DOM tree with its own root, but it is encapsulated: outside selectors do not cross the shadow boundary, and styles inside do not leak out. The browser flattens shadow trees into the render tree at composition time.'],
       ['Error recovery', 'The HTML parser never throws errors. It silently repairs missing closing tags, improperly nested elements, and invalid attributes — a consequence of the web\'s need to handle decades of imperfect markup.'],
       ['innerHTML re-parsing', 'Setting innerHTML discards and recreates every child node from scratch — even nodes that didn\'t change. It also destroys attached event listeners. Use insertAdjacentHTML() or DOM APIs for targeted updates.'],
       ['Speculative parsing', 'Modern browsers run a speculative parse of the full HTML document to discover external resources early, dispatching network requests before the main parser even reaches those tags.'],
     ],
-    insight: `The preload scanner is why <link rel="preload"> has such high impact: it runs in parallel with parser stalls. Even if a render-blocking script freezes parsing for 500ms, the preload scanner has already dispatched your hero image, critical font, and above-the-fold stylesheet. Remove the preload hint and that 500ms stall costs you the image fetch time too — compounding the delay. The preload scanner is your ally against render-blocking resources.`,
+    insight: `The DOM is the contract between everything that runs in the page. The HTML parser produces it; CSS matches against it; layout reads geometry off it; JavaScript mutates it; the accessibility tree mirrors it. Every other tree in the rendering pipeline — render tree, layout tree, paint property tree — is a derivative built from this one. Which is why DOM size is the lever that touches every downstream cost: a 50,000-node DOM does not just hurt querySelectorAll, it inflates style recalculation, layout, paint, and memory all at once. Keep it small and the entire pipeline gets faster for free.`,
     diagramKey: 'html',
     sceneKey: 'html',
-    seoDescription: 'How HTML parsing works: the DOM tree, render-blocking scripts, async vs defer, preload scanner, speculative parsing, and error recovery.',
+    seoDescription: 'How HTML parsing works: the DOM tree as a data structure, node types and pointers, render-blocking scripts, async vs defer, preload scanner, DocumentFragment, Shadow DOM, and error recovery.',
   },
   {
     id: 'css-parsing',
@@ -222,12 +227,14 @@ The parser is deliberately error-tolerant: broken HTML gets silently repaired.`,
     order: 7,
     title: 'CSS Parsing',
     subtitle: 'Building the style rulebook before a single pixel gets painted',
-    example: `The browser processes all CSS into one structure — the CSSOM:
+    example: `The browser processes all CSS into one structure — the CSS Object Model:
 
-1. Parse: turn raw CSS text into rule objects
-   body { font-size: 16px }  →  rule attached to 'body' selector
-   .card { padding: 16px }   →  rule attached to '.card' selector
-   .card p { color: red }    →  rule attached to 'p inside .card'
+1. Parse: turn raw CSS text into a tree of rule objects
+   document.styleSheets[0]          → CSSStyleSheet
+   .cssRules                        → CSSRuleList
+   .cssRules[0]                     → CSSStyleRule { selectorText, style }
+   .cssRules[1]                     → CSSMediaRule { conditionText, cssRules }
+   .cssRules[2]                     → CSSImportRule, CSSKeyframesRule, ...
 
 2. Cascade: for every DOM element, compute which rules win
    - More specific rules beat less specific ones (#id > .class > element)
@@ -236,21 +243,25 @@ The parser is deliberately error-tolerant: broken HTML gets silently repaired.`,
 
 3. Inherit: properties like color and font-size flow down to children
 
-Until the CSSOM is fully built, the browser pauses rendering entirely.
-(One slow CSS file = white screen while it downloads and parses.)`,
+The CSSOM is a real, mutable tree. document.styleSheets[0].insertRule('...') adds a rule live, no reparsing needed. rule.style.color = 'red' invalidates every element that matches. Mirrors the DOM in shape but holds rules instead of nodes.
+
+Until the CSSOM is fully built, the browser pauses rendering entirely. (One slow CSS file = white screen while it downloads and parses.)`,
     facts: [
+      ['CSSOM is queryable', 'document.styleSheets returns a StyleSheetList. Walk it: sheet.cssRules → rule.selectorText, rule.style, rule.cssText. Insert rules at runtime with sheet.insertRule(text, index). The CSSOM is the official API for inspecting and mutating styles without round-tripping through stylesheet text.'],
       ['Render-blocking CSS', '<link rel="stylesheet"> blocks the browser from rendering anything until fully downloaded and parsed. Unlike scripts, there\'s no async equivalent — inlining critical styles is the only escape.'],
       ['Style Invalidation', 'Changing a class or attribute marks affected DOM nodes as "style-dirty" — but doesn\'t recalculate immediately. The browser batches dirty nodes and recomputes during the next frame\'s style pass. Reading getComputedStyle() mid-frame forces a synchronous recalculation right now.'],
+      ['getComputedStyle flushes', 'Calling getComputedStyle(el) is a synchronous boundary: the browser must apply every pending CSSOM mutation and recalculate styles before it can return a value. Inside a loop it kills performance — capture the value once, then iterate.'],
       ['Selector matching cost', 'On every style recalculation, the engine matches every CSS rule against every element. Deeply nested selectors (.nav .menu > li a span) force the engine to walk up the ancestor chain for each candidate. Bloom filters and selector hashing help, but the O(n×rules) relationship remains. Flat selectors are always faster.'],
       ['Specificity scoring', 'IDs score 0-1-0-0, classes and attributes 0-0-1-0, elements 0-0-0-1. The highest total wins. !important bypasses the entire system — overriding it requires another !important at equal or higher specificity.'],
+      ['CSSOM vs computed style', 'The CSSOM holds rules (selector + declarations, unresolved). The computed-style cache holds resolved values per element (px instead of em, rgba instead of var). They are different trees: the CSSOM is one shared structure; the computed-style cache hangs off individual DOM nodes and is rebuilt on every style recalculation.'],
       ['Critical CSS inlining', 'Putting above-the-fold styles in a <style> block in <head> lets the first paint happen before external CSS finishes loading. The tradeoff: these styles aren\'t cached separately.'],
       ['CSS custom properties', 'Variables are resolved at computed-value time, not parse time. You can change --color: blue to --color: red via JavaScript at runtime without re-parsing any CSS. The cascade recalculates only the affected properties.'],
       ['Unused CSS', 'The browser parses all CSS rules even if they match nothing on the current page. A 200KB stylesheet on a page that uses 5% of its rules wastes parse time on every navigation.'],
     ],
-    insight: `CSS is render-blocking with no async equivalent — but there's a battle-tested workaround: <link rel="stylesheet" media="print" onload="this.media='all'">. Marking it as print-only makes the browser treat it as non-blocking, then the onload handler switches it to apply to all media once it's ready. It looks wrong. It works perfectly. Pair it with inlined critical CSS for the above-the-fold content, and your first paint no longer waits for your entire stylesheet.`,
+    insight: `The CSSOM and the DOM are siblings, not parent and child. The browser builds them in parallel, then joins them at style recalculation — for every DOM node, walk the CSSOM, find matching rules, resolve specificity, write the result into the node's computed-style slot. This is also why CSS is render-blocking but JavaScript can be deferred: the renderer literally cannot compose its output without both trees in hand. Lose either one and the screen stays blank. The classic <link media="print" onload="this.media='all'"> trick exploits this by making the browser treat a sheet as non-applicable until it has loaded — only then does it join the CSSOM and unblock the first paint.`,
     diagramKey: 'css',
     sceneKey: 'css',
-    seoDescription: 'How CSS parsing and the CSSOM work: cascade specificity, style invalidation, selector matching cost, render-blocking behavior, and critical CSS optimization.',
+    seoDescription: 'How CSS parsing and the CSSOM work: CSSStyleSheet and CSSRule hierarchy, queryable styleSheets API, cascade specificity, style invalidation, getComputedStyle flushing, and critical CSS optimization.',
   },
   {
     id: 'render-tree',
