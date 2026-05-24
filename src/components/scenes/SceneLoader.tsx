@@ -34,11 +34,11 @@ const customScenes: Record<string, LazyExoticComponent<ComponentType>> = {
   'property-trees-placeholder':                lazy(() => import('./PropertyTreesScene')),
   'layer-promotion-placeholder':               lazy(() => import('./LayerPromotionScene')),
   'commit-and-compositor-thread-placeholder':  lazy(() => import('./CommitAndCompositorThreadScene')),
+  'tiling-rasterization-placeholder':          lazy(() => import('./TilingRasterizationScene')),
 }
 
 // Phase E new concepts — all currently route to PlaceholderScene.
 const placeholderSceneKeys = new Set<string>([
-  'tiling-rasterization-placeholder',
   'vsync-display-placeholder',
 ])
 
