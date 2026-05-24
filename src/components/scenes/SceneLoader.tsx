@@ -25,12 +25,12 @@ const customScenes: Record<string, LazyExoticComponent<ComponentType>> = {
   frameBudget: lazy(() => import('./FrameBudgetScene')),
   'resource-hints-placeholder':                lazy(() => import('./ResourceHintsScene')),
   'resource-loading-priorities-placeholder':   lazy(() => import('./ResourceLoadingPrioritiesScene')),
+  'scripts-during-parsing-placeholder':        lazy(() => import('./ScriptsDuringParsingScene')),
   'display-lists-placeholder':                 lazy(() => import('./DisplayListsScene')),
 }
 
 // Phase E new concepts — all currently route to PlaceholderScene.
 const placeholderSceneKeys = new Set<string>([
-  'scripts-during-parsing-placeholder',
   'style-recalculation-placeholder',
   'layout-tree-construction-placeholder',
   'containment-placeholder',
