@@ -8,7 +8,6 @@ const PHASE_ICONS: Record<string, string> = {
   Network: '⟳',
   Browser: '◈',
   Render: '▦',
-  Execute: '⚡',
   Optimize: '◎',
 }
 

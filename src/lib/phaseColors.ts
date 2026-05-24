@@ -1,4 +1,4 @@
-export type Phase = 'Network' | 'Browser' | 'Render' | 'Execute' | 'Optimize'
+export type Phase = 'Network' | 'Browser' | 'Render' | 'Optimize'
 
 export type PhaseColor = {
   accent: string
@@ -31,13 +31,6 @@ export const PHASE_COLORS: Record<Phase, PhaseColor> = {
     dim: 'rgba(103, 232, 249, 0.35)',
     text: '#F4F4F8',
     glow: 'rgba(103, 232, 249, 0.18)',
-  },
-  Execute: {
-    accent: '#7DD3FC',                          // base ice cyan again
-    bg: 'rgba(125, 211, 252, 0.06)',
-    dim: 'rgba(125, 211, 252, 0.35)',
-    text: '#F4F4F8',
-    glow: 'rgba(125, 211, 252, 0.18)',
   },
   Optimize: {
     accent: '#BAE6FD',                          // softest pale cyan

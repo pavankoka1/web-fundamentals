@@ -23,22 +23,22 @@ const customScenes: Record<string, LazyExoticComponent<ComponentType>> = {
   cdn:         lazy(() => import('./CdnScene')),
   sw:          lazy(() => import('./SwScene')),
   frameBudget: lazy(() => import('./FrameBudgetScene')),
-  'resource-hints-placeholder':                lazy(() => import('./ResourceHintsScene')),
-  'resource-loading-priorities-placeholder':   lazy(() => import('./ResourceLoadingPrioritiesScene')),
-  'scripts-during-parsing-placeholder':        lazy(() => import('./ScriptsDuringParsingScene')),
-  'style-recalculation-placeholder':           lazy(() => import('./StyleRecalculationScene')),
-  'layout-tree-construction-placeholder':      lazy(() => import('./LayoutTreeConstructionScene')),
-  'containment-placeholder':                   lazy(() => import('./ContainmentScene')),
-  'display-lists-placeholder':                 lazy(() => import('./DisplayListsScene')),
-  'stacking-contexts-placeholder':             lazy(() => import('./StackingContextsScene')),
-  'property-trees-placeholder':                lazy(() => import('./PropertyTreesScene')),
-  'layer-promotion-placeholder':               lazy(() => import('./LayerPromotionScene')),
-  'commit-and-compositor-thread-placeholder':  lazy(() => import('./CommitAndCompositorThreadScene')),
-  'tiling-rasterization-placeholder':          lazy(() => import('./TilingRasterizationScene')),
-  'vsync-display-placeholder':                 lazy(() => import('./VSyncDisplayScene')),
+  'resource-hints-scene':                lazy(() => import('./ResourceHintsScene')),
+  'resource-loading-priorities-scene':   lazy(() => import('./ResourceLoadingPrioritiesScene')),
+  'scripts-during-parsing-scene':        lazy(() => import('./ScriptsDuringParsingScene')),
+  'style-recalculation-scene':           lazy(() => import('./StyleRecalculationScene')),
+  'layout-tree-construction-scene':      lazy(() => import('./LayoutTreeConstructionScene')),
+  'containment-scene':                   lazy(() => import('./ContainmentScene')),
+  'display-lists-scene':                 lazy(() => import('./DisplayListsScene')),
+  'stacking-contexts-scene':             lazy(() => import('./StackingContextsScene')),
+  'property-trees-scene':                lazy(() => import('./PropertyTreesScene')),
+  'layer-promotion-scene':               lazy(() => import('./LayerPromotionScene')),
+  'commit-and-compositor-thread-scene':  lazy(() => import('./CommitAndCompositorThreadScene')),
+  'tiling-rasterization-scene':          lazy(() => import('./TilingRasterizationScene')),
+  'vsync-display-scene':                 lazy(() => import('./VSyncDisplayScene')),
 }
 
-// Phase E new concepts — all currently route to PlaceholderScene.
+// Reserved for any future concepts that need to fall back to a generic placeholder visualization.
 const placeholderSceneKeys = new Set<string>([])
 
 interface SceneLoaderProps {
