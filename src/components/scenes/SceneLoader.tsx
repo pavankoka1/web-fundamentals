@@ -28,6 +28,7 @@ const customScenes: Record<string, LazyExoticComponent<ComponentType>> = {
   'scripts-during-parsing-placeholder':        lazy(() => import('./ScriptsDuringParsingScene')),
   'style-recalculation-placeholder':           lazy(() => import('./StyleRecalculationScene')),
   'layout-tree-construction-placeholder':      lazy(() => import('./LayoutTreeConstructionScene')),
+  'containment-placeholder':                   lazy(() => import('./ContainmentScene')),
   'display-lists-placeholder':                 lazy(() => import('./DisplayListsScene')),
   'stacking-contexts-placeholder':             lazy(() => import('./StackingContextsScene')),
   'property-trees-placeholder':                lazy(() => import('./PropertyTreesScene')),
@@ -35,7 +36,6 @@ const customScenes: Record<string, LazyExoticComponent<ComponentType>> = {
 
 // Phase E new concepts — all currently route to PlaceholderScene.
 const placeholderSceneKeys = new Set<string>([
-  'containment-placeholder',
   'layer-promotion-placeholder',
   'commit-and-compositor-thread-placeholder',
   'tiling-rasterization-placeholder',
